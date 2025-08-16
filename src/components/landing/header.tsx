@@ -1,8 +1,13 @@
+
+'use client';
+
 import Link from 'next/link';
-import { BookOpen, Search, Menu } from 'lucide-react';
+import { BookOpen, Search, Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Logo = () => (
   <svg
@@ -43,6 +48,21 @@ const Logo = () => (
 
 
 export function Header() {
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsAdminLoggedIn(!!sessionStorage.getItem('isAdminLoggedIn'));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('isAdminLoggedIn');
+    setIsAdminLoggedIn(false);
+    router.push('/login');
+  };
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/lab-programs', label: 'Lab Programs' },
@@ -74,9 +94,20 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search resources..." className="pl-10 w-48 bg-muted border-none rounded-full" />
           </div>
-          <Button asChild className='rounded-full'>
-            <Link href="/login">Login</Link>
-          </Button>
+          {isAdminLoggedIn ? (
+            <>
+              <Button asChild className='rounded-full' variant="outline">
+                <Link href="/admin">Admin Panel</Link>
+              </Button>
+              <Button onClick={handleLogout} className='rounded-full'>
+                <LogOut className="mr-2 h-4 w-4" /> Logout
+              </Button>
+            </>
+          ) : (
+            <Button asChild className='rounded-full'>
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
         </div>
         <div className="md:hidden">
           <Sheet>
@@ -108,9 +139,20 @@ export function Header() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search resources..." className="pl-10 w-full" />
                   </div>
-                  <Button asChild className='rounded-full'>
-                    <Link href="/login">Login</Link>
-                  </Button>
+                   {isAdminLoggedIn ? (
+                      <div className='flex flex-col gap-2'>
+                        <Button asChild className='rounded-full' variant="outline">
+                          <Link href="/admin">Admin Panel</Link>
+                        </Button>
+                        <Button onClick={handleLogout} className='rounded-full'>
+                          <LogOut className="mr-2 h-4 w-4" /> Logout
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button asChild className='rounded-full'>
+                        <Link href="/login">Login</Link>
+                      </Button>
+                    )}
                 </div>
               </div>
             </SheetContent>

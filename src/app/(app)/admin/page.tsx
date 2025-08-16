@@ -85,23 +85,12 @@ export default function AdminPage() {
 
   const totalDownloads = resources.reduce((sum, resource) => sum + resource.downloads, 0);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('isAdminLoggedIn');
-    router.push('/login');
-  };
-
-
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
         <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
             <p className="text-muted-foreground mt-1">Manage and upload resources for Codsach</p>
-        </div>
-        <div className='flex items-center gap-4'>
-            <Button variant="destructive" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
         </div>
       </div>
       

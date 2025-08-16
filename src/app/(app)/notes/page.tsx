@@ -31,6 +31,11 @@ export default function NotesPage() {
       setIsLoading(true);
       const githubToken = localStorage.getItem('githubToken');
       if (!githubToken) {
+        toast({
+            title: 'GitHub Not Connected',
+            description: 'Please connect your GitHub account in the admin panel to see resources.',
+            variant: 'destructive',
+        });
         setIsLoading(false);
         return;
       }
@@ -81,7 +86,7 @@ export default function NotesPage() {
   }, [allResources, subjectFilter, semesterFilter, sortOrder]);
 
   const uniqueSubjects = ['all', ...Array.from(new Set(allResources.map(r => r.subject).filter(Boolean))) as string[]];
-  const uniqueSemesters = ['all', ...Array.from(new Set(allResources.map(r => r.semester).filter(Boolean))) as string[]];
+  const semesters = ['all', '1', '2', '3', '4'];
 
 
   return (
@@ -113,7 +118,7 @@ export default function NotesPage() {
                 <SelectValue placeholder="All Semesters" />
               </SelectTrigger>
               <SelectContent>
-                 {uniqueSemesters.map(sem => (
+                 {semesters.map(sem => (
                     <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
                 ))}
               </SelectContent>

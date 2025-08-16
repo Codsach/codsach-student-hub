@@ -47,16 +47,20 @@ export function Header() {
     router.push('/login');
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const query = e.target.value;
+  const handleSearch = (e: React.FormEvent<HTMLInputElement>) => {
+      const query = e.currentTarget.value;
       setSearchQuery(query);
+      
+      const isHomePage = pathname === '/';
+      const targetPath = isHomePage ? '/notes' : pathname;
+
       const params = new URLSearchParams(searchParams);
       if (query) {
         params.set('q', query);
       } else {
         params.delete('q');
       }
-      router.replace(`${pathname}?${params.toString()}`);
+      router.replace(`${targetPath}?${params.toString()}`);
   }
   
   useEffect(() => {
@@ -75,33 +79,35 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
               <Logo />
                <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
                 Codsach
               </h1>
             </Link>
-            <nav className="hidden items-center gap-6 md:flex">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
         </div>
-        <div className="hidden items-center gap-4 md:flex">
+
+        <nav className="hidden items-center gap-6 md:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden items-center justify-end gap-4 md:flex">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
                 placeholder="Search resources..." 
                 className="pl-10 w-48 bg-muted border-none rounded-full"
                 value={searchQuery}
-                onChange={handleSearch}
+                onInput={handleSearch}
              />
           </div>
           <ThemeToggle />
@@ -157,7 +163,7 @@ export function Header() {
                         placeholder="Search resources..." 
                         className="pl-10 w-full" 
                         value={searchQuery}
-                        onChange={handleSearch}
+                        onInput={handleSearch}
                     />
                   </div>
                    {isAdminLoggedIn ? (

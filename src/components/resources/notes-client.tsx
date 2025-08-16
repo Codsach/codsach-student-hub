@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
 import { ListFilter, Loader2, SlidersHorizontal } from 'lucide-react';
-import { listResources, type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +21,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export function NotesClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
   const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
-  const [isLoading, setIsLoading] = useState(initialResources.length === 0 && !serverError);
+  const [isLoading, setIsLoading] = useState(false);
   
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -33,40 +33,14 @@ export function NotesClient({ initialResources, serverError }: { initialResource
 
 
    useEffect(() => {
-    async function fetchClientSide() {
-        if (initialResources.length === 0 && !serverError) {
-            setIsLoading(true);
-            const githubToken = localStorage.getItem('githubToken');
-            if (!githubToken) {
-                toast({
-                  title: 'GitHub Not Connected',
-                  description: 'Please connect your GitHub account in the admin panel to see resources.',
-                  variant: 'destructive',
-                });
-                setIsLoading(false);
-                return;
-            }
-            try {
-                const fetchedResources = await listResources({
-                    githubToken,
-                    repository: 'Codsach/codsach-resources',
-                    category: 'notes',
-                });
-                setResources(fetchedResources);
-            } catch (error) {
-                console.error("Failed to fetch resources on client:", error);
-                toast({
-                  title: 'Error',
-                  description: 'Could not fetch resources from GitHub.',
-                  variant: 'destructive',
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        }
+    if (serverError) {
+        toast({
+            title: 'Error',
+            description: serverError,
+            variant: 'destructive',
+        });
     }
-    fetchClientSide();
-  }, [initialResources.length, serverError, toast]);
+  }, [serverError, toast]);
 
    useEffect(() => {
     let resourcesToFilter = [...resources];
@@ -230,7 +204,7 @@ export function NotesClient({ initialResources, serverError }: { initialResource
       ) : (
          <div className='text-center py-12'>
             <h3 className='text-xl font-semibold'>No Notes Found</h3>
-            <p className='text-muted-foreground mt-2'>Please connect to GitHub or try adjusting your search or filters.</p>
+            <p className='text-muted-foreground mt-2'>Please ensure the GITHUB_TOKEN is set on the server and resources have been uploaded.</p>
         </div>
       )}
     </div>

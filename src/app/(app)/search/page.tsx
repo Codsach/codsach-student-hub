@@ -19,11 +19,14 @@ function SearchPageContent() {
   useEffect(() => {
     const fetchResources = async () => {
       setIsLoading(true);
-      const githubToken = localStorage.getItem('githubToken');
+      const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN || localStorage.getItem('githubToken');
+      
       if (!githubToken) {
-        toast({
+        // This case should ideally not be hit if the server pre-renders,
+        // but it's a fallback for client-side search or if server fails.
+         toast({
           title: 'GitHub Not Connected',
-          description: 'Please connect your GitHub account in the admin panel to see resources.',
+          description: 'Please set the GITHUB_TOKEN environment variable for searching.',
           variant: 'destructive',
         });
         setIsLoading(false);
@@ -43,10 +46,10 @@ function SearchPageContent() {
 
         setAllResources(allFetchedResources);
       } catch (error) {
-        console.error("Failed to fetch resources:", error);
+        console.error("Failed to fetch resources for search:", error);
         toast({
           title: 'Error',
-          description: 'Could not fetch resources from GitHub.',
+          description: 'Could not fetch resources from GitHub for search.',
           variant: 'destructive',
         });
       } finally {

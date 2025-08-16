@@ -15,7 +15,7 @@ export function Hero() {
           <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8 transition-transform duration-300 ease-in-out hover:scale-105 animate-in fade-in zoom-in-95 duration-500 delay-500">
             <Link href="#resources">Explore Resources</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-primary rounded-full px-8 transition-transform duration-300 ease-in-out hover:scale-105 animate-in fade-in zoom-in-95 duration-500 delay-500">
+          <Button asChild variant="outline" size="lg" className="border border-white bg-transparent text-white hover:bg-white hover:text-primary rounded-full px-8 transition-transform duration-300 ease-in-out hover:scale-105 animate-in fade-in zoom-in-95 duration-500 delay-500">
             <Link href="#resources">Browse Notes</Link>
           </Button>
         </div>

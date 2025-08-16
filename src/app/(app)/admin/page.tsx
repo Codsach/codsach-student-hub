@@ -240,7 +240,7 @@ export default function AdminPage() {
                     />
                 </div>
                 <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 space-y-2'>
-                    <p className='font-semibold flex items-center gap-2'><Info className='h-4 w-4'/>How to get a GitHub Token:</p>
+                    <div className='font-semibold flex items-center gap-2'><Info className='h-4 w-4'/>How to get a GitHub Token:</div>
                     <ol className='list-decimal list-inside space-y-1'>
                         <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
                         <li>Click "Generate new token (classic)"</li>
@@ -316,7 +316,7 @@ export default function AdminPage() {
                     </div>
                 </div>
                 <div>
-                  <Label htmlFor="file">File *</Label>
+                  <Label htmlFor="file-upload">File *</Label>
                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
                     <input
@@ -335,12 +335,12 @@ export default function AdminPage() {
                             }}>Remove</Button>
                         </div>
                     ) : (
-                        <>
-                            <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                            <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
-                        </>
+                        <div className='mt-4'>
+                           <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose File</Button>
+                           <p className="mt-2 text-sm text-gray-600">or drag and drop</p>
+                           <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
+                        </div>
                     )}
-                    <Button variant="outline" className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose File</Button>
                   </div>
                 </div>
                 <div className="flex justify-end">
@@ -434,4 +434,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

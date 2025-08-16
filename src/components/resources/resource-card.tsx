@@ -104,7 +104,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
                 <Button size="sm" asChild disabled={!file.downloadUrl}>
-                  <Link href={getDownloadLink(file.downloadUrl)} target="_blank" rel="noopener noreferrer">
+                  <Link href={getDownloadLink(file.downloadUrl)} download={file.name} target="_blank" rel="noopener noreferrer">
                     <Download className="mr-2 h-4 w-4" /> Download
                   </Link>
                 </Button>
@@ -119,7 +119,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                     <p className="text-sm font-medium">{title}</p>
                 </div>
                 <Button size="sm" asChild>
-                    <Link href={getDownloadLink(downloadUrl)} target="_blank" rel="noopener noreferrer">
+                    <Link href={getDownloadLink(downloadUrl)} download target="_blank" rel="noopener noreferrer">
                     <Download className="mr-2 h-4 w-4" /> Download
                     </Link>
                 </Button>

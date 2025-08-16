@@ -8,7 +8,6 @@ async function LabProgramsPageData() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
-        // This will only work if the GITHUB_TOKEN is set in the environment
         const githubToken = process.env.GITHUB_TOKEN;
         if (githubToken) {
             resources = await listResources({
@@ -16,15 +15,14 @@ async function LabProgramsPageData() {
                 repository: 'Codsach/codsach-resources',
                 category: 'lab-programs',
             });
+        } else {
+             error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch lab programs on server:", e);
-        // Don't throw an error, let the client handle it
         error = "Could not fetch resources from GitHub on the server.";
     }
 
-    // Pass the server-fetched resources (or empty array) to the client component
-    // The client component will handle fetching if initialResources is empty.
     return <LabProgramsClient initialResources={resources} serverError={error} />;
 }
 

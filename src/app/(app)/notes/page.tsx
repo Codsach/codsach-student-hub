@@ -16,8 +16,11 @@ async function NotesPageData() {
                 repository: 'Codsach/codsach-resources',
                 category: 'notes',
             });
+        } else {
+            error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
-    } catch (e: any) {
+    } catch (e: any)
+    {
         console.error("Failed to fetch notes on server:", e);
         error = "Could not fetch resources from GitHub on the server.";
     }

@@ -15,6 +15,8 @@ async function QuestionPapersPageData() {
                 repository: 'Codsach/codsach-resources',
                 category: 'question-papers',
             });
+        } else {
+            error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch question papers on server:", e);

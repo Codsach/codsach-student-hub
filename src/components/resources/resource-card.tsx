@@ -157,7 +157,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                 <span className="sr-only">Close</span>
             </DialogClose>
             </DialogHeader>
-            <div className="h-full w-full mt-4">
+            <div className="h-full w-full">
             <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
                 className="h-full w-full"

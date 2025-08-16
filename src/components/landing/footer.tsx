@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
 
 const Logo = () => (
-  <div className="relative w-8 h-8">
+  <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
     <svg className="absolute w-full h-full animate-[spin_5s_linear_infinite]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="20" width="60" height="60" rx="12" stroke="url(#paint0_linear_logo)" strokeWidth="10"/>
+        <rect x="20" y="20" width="60" height="60" rx="12" stroke="url(#paint0_linear_logo_footer)" strokeWidth="10"/>
         <defs>
-            <linearGradient id="paint0_linear_logo" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+            <linearGradient id="paint0_linear_logo_footer" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
                 <stop stopColor="hsl(var(--primary))"/>
-                <stop offset="1" stopColor="hsl(var(--primary)/0.5)"/>
+                <stop offset="1" stopColor="#50B4F2"/>
             </linearGradient>
         </defs>
     </svg>
@@ -34,7 +34,10 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary group">
               <Logo />
-              <span className="font-headline">Codsach</span>
+              <h1 className="font-headline text-2xl font-bold tracking-tight">
+                <span className="text-primary">Cod</span>
+                <span className="text-[#50B4F2]">sach</span>
+              </h1>
             </Link>
             <p className="text-sm max-w-xs">
               Your comprehensive resource hub for MCA studies.

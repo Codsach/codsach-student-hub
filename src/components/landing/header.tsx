@@ -16,7 +16,7 @@ const Logo = () => (
             <defs>
                 <linearGradient id="paint0_linear_logo_header" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
                     <stop stopColor="hsl(var(--primary))"/>
-                    <stop offset="1" stopColor="hsl(var(--primary)/0.5)"/>
+                    <stop offset="1" stopColor="#50B4F2"/>
                 </linearGradient>
             </defs>
         </svg>
@@ -56,7 +56,10 @@ export function Header() {
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary group">
           <Logo />
-          <span className="font-headline">Codsach</span>
+           <h1 className="font-headline text-2xl font-bold tracking-tight">
+            <span className="text-primary">Cod</span>
+            <span className="text-[#50B4F2]">sach</span>
+          </h1>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
@@ -101,7 +104,10 @@ export function Header() {
               <div className="flex flex-col h-full">
                 <div className="flex items-center gap-2 font-bold text-xl p-4 border-b text-primary">
                    <Logo />
-                   <span className="font-headline">Codsach</span>
+                   <h1 className="font-headline text-2xl font-bold tracking-tight">
+                    <span className="text-primary">Cod</span>
+                    <span className="text-[#50B4F2]">sach</span>
+                  </h1>
                 </div>
                 <nav className="flex flex-col gap-4 p-4">
                   {navLinks.map((link) => (

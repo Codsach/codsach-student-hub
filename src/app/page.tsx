@@ -8,7 +8,7 @@ import { Cta } from '@/components/landing/cta';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-dvh bg-white w-full">
+    <div className="flex flex-col min-h-dvh bg-background w-full">
       <Header />
       <main className="flex-grow">
         <Hero />

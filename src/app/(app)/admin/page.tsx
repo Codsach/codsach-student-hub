@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Octokit } from 'octokit';
 import { useToast } from '@/hooks/use-toast';
+import { uploadFile } from '@/ai/flows/upload-flow';
 
 
 export default function AdminPage() {
@@ -27,6 +28,15 @@ export default function AdminPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
+
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [subject, setSubject] = useState('');
+  const [semester, setSemester] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
 
   useEffect(() => {
@@ -71,6 +81,66 @@ export default function AdminPage() {
         localStorage.removeItem('githubToken');
     } finally {
         setIsConnecting(false);
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setFile(event.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!isConnected) {
+        toast({ title: "Error", description: "Please connect to GitHub first.", variant: "destructive" });
+        return;
+    }
+    if (!title || !category || !description || !file) {
+        toast({ title: "Error", description: "Please fill all required fields and select a file.", variant: "destructive" });
+        return;
+    }
+    setIsUploading(true);
+
+    try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Content = (reader.result as string).split(',')[1];
+
+            const result = await uploadFile({
+                githubToken: githubToken,
+                repository: 'Codsach/codsach-resources',
+                filePath: `${category}/${file.name}`,
+                fileContent: base64Content,
+                commitMessage: `feat: Add ${title}`,
+            });
+
+            if (result.success) {
+                toast({ title: "Success", description: `File uploaded successfully! URL: ${result.url}` });
+                // Reset form
+                setTitle('');
+                setCategory('');
+                setDescription('');
+                setSubject('');
+                setSemester('');
+                setTags([]);
+                setFile(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            } else {
+                toast({ title: "Upload Failed", description: result.error, variant: "destructive" });
+            }
+            setIsUploading(false);
+        };
+        reader.onerror = (error) => {
+             toast({ title: "File Read Error", description: "Could not read the selected file.", variant: "destructive" });
+             setIsUploading(false);
+        };
+
+    } catch (error: any) {
+        toast({ title: "Upload Failed", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+        setIsUploading(false);
     }
   };
 
@@ -139,7 +209,7 @@ export default function AdminPage() {
         </div>
       </div>
       
-      <Tabs defaultValue="manage">
+      <Tabs defaultValue="upload">
         <TabsList className="mb-6">
           <TabsTrigger value="upload">Upload Resource</TabsTrigger>
           <TabsTrigger value="manage">Manage Resources</TabsTrigger>
@@ -197,11 +267,11 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="title">Title *</Label>
-                    <Input id="title" placeholder="Enter resource title" />
+                    <Input id="title" placeholder="Enter resource title" value={title} onChange={(e) => setTitle(e.target.value)} />
                   </div>
                   <div>
                     <Label htmlFor="category">Category *</Label>
-                    <Select>
+                    <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger id="category">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
@@ -216,22 +286,22 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="description">Description *</Label>
-                  <Textarea id="description" placeholder="Enter resource description" />
+                  <Textarea id="description" placeholder="Enter resource description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="e.g., Data Structures" />
+                    <Input id="subject" placeholder="e.g., Data Structures" value={subject} onChange={(e) => setSubject(e.target.value)} />
                   </div>
                   <div>
                     <Label htmlFor="semester">Semester</Label>
-                    <Input id="semester" placeholder="e.g., 1, 2, 3" />
+                    <Input id="semester" placeholder="e.g., 1, 2, 3" value={semester} onChange={(e) => setSemester(e.target.value)} />
                   </div>
                 </div>
                  <div>
                     <Label htmlFor="tags">Tags</Label>
                     <div className="flex gap-2">
-                        <Input id="tags" placeholder="Enter tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} />
+                        <Input id="tags" placeholder="Enter tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTag()} />
                         <Button type="button" variant="outline" onClick={handleAddTag}><PlusCircle className='h-4 w-4 mr-2' />Add Tag</Button>
                     </div>
                      <div className="flex flex-wrap gap-2 mt-2">
@@ -247,16 +317,39 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <Label htmlFor="file">File *</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                    <p className="text-xs text-gray-500">PDF, DOC, ZIP, or other file types (Max 25MB for GitHub)</p>
-                    <Button variant="outline" className="mt-4">Choose File</Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    {file ? (
+                        <div className='mt-2 text-sm text-gray-600'>
+                            <p>Selected file: {file.name}</p>
+                            <Button variant="link" onClick={() => {
+                                setFile(null);
+                                if(fileInputRef.current) fileInputRef.current.value = '';
+                            }}>Remove</Button>
+                        </div>
+                    ) : (
+                        <>
+                            <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
+                            <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
+                        </>
+                    )}
+                    <Button variant="outline" className="mt-4" onClick={() => fileInputRef.current?.click()}>Choose File</Button>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                    <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                        <Upload className="mr-2 h-4 w-4" /> Upload to GitHub
+                    <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={handleUpload} disabled={isUploading || !isConnected}>
+                        {isUploading ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+                        ) : (
+                            <><Upload className="mr-2 h-4 w-4" /> Upload to GitHub</>
+                        )}
                     </Button>
                 </div>
               </div>
@@ -342,4 +435,3 @@ export default function AdminPage() {
   );
 }
 
-    

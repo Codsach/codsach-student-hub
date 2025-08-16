@@ -1,3 +1,4 @@
+
 import { Download, Users, Star, RefreshCw } from 'lucide-react';
 
 export function Benefits() {

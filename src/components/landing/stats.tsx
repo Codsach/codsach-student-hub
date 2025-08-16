@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { Book, Download, Users, HardDrive } from 'lucide-react';
@@ -87,7 +88,7 @@ export function Stats() {
   ];
 
   return (
-    <section id="about" className="py-16 sm:py-20 bg-background">
+    <section id="about" className="py-16 sm:py-20 bg-muted/20">
       <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {stats.map((stat) => (

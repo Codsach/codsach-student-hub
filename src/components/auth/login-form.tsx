@@ -17,6 +17,7 @@ export function LoginForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (email === 'admin@codsach.com' && password === 'codsach@22') {
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
             window.location.href = '/admin';
         } else {
             toast({

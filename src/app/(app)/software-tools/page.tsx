@@ -16,6 +16,8 @@ async function SoftwareToolsPageData() {
                 repository: 'Codsach/codsach-resources',
                 category: 'software-tools',
             });
+        } else {
+            error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch software tools on server:", e);

@@ -8,6 +8,7 @@ import { Calendar, HardDrive, Download, Tag, FileText, Eye, X } from 'lucide-rea
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { downloadFile } from '@/lib/download';
 
 interface ResourceFile {
     name: string;
@@ -43,18 +44,9 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
     }
   }
 
-  const getDownloadLink = (url: string | null) => {
-    if (!url) return '#';
-    
-    // Check if it's a Google Drive link
-    if (url.includes('drive.google.com')) {
-      const match = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/&?]+)/);
-      if (match && match[1]) {
-        const fileId = match[1];
-        return `https://drive.google.com/uc?export=download&id=${fileId}`;
-      }
-    }
-    return url;
+  const handleDownload = (url: string | null, filename: string) => {
+    if (!url) return;
+    downloadFile(url, filename);
   };
   
   const totalSize = files.reduce((acc, file) => acc + parseFloat(file.size), 0).toFixed(2);
@@ -103,10 +95,8 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                 <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl}>
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
-                <Button size="sm" asChild disabled={!file.downloadUrl}>
-                  <Link href={getDownloadLink(file.downloadUrl) || '#'} download={file.name}>
+                <Button size="sm" onClick={() => handleDownload(file.downloadUrl, file.name)} disabled={!file.downloadUrl}>
                     <Download className="mr-2 h-4 w-4" /> Download
-                  </Link>
                 </Button>
               </div>
             </div>
@@ -119,8 +109,8 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                     <p className="text-sm font-medium">{title}</p>
                 </div>
                 <Button size="sm" asChild>
-                    <Link href={getDownloadLink(downloadUrl) || '#'} download>
-                    <Download className="mr-2 h-4 w-4" /> Download
+                    <Link href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                        <Download className="mr-2 h-4 w-4" /> Download
                     </Link>
                 </Button>
              </div>
@@ -155,7 +145,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
             </DialogHeader>
             <div className="flex-1 w-full">
               <iframe
-                  src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(viewFileUrl || '')}&embedded=true`}
                   className="h-full w-full"
                   frameBorder="0"
               ></iframe>

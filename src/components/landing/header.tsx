@@ -74,7 +74,9 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search resources..." className="pl-10 w-48 bg-muted border-none rounded-full" />
           </div>
-          <Button className='rounded-full'>Login</Button>
+          <Button asChild className='rounded-full'>
+            <Link href="/login">Login</Link>
+          </Button>
         </div>
         <div className="md:hidden">
           <Sheet>
@@ -106,7 +108,9 @@ export function Header() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search resources..." className="pl-10 w-full" />
                   </div>
-                  <Button className='rounded-full'>Login</Button>
+                  <Button asChild className='rounded-full'>
+                    <Link href="/login">Login</Link>
+                  </Button>
                 </div>
               </div>
             </SheetContent>

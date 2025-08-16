@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle, LinkIcon } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle, LinkIcon, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +59,7 @@ export default function AdminPage() {
   const [subject, setSubject] = useState('');
   const [semester, setSemester] = useState('');
   const [year, setYear] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -166,8 +166,12 @@ export default function AdminPage() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setFile(event.target.files[0]);
+      setFiles(Array.from(event.target.files));
     }
+  };
+
+  const handleRemoveFile = (fileName: string) => {
+    setFiles(files.filter(f => f.name !== fileName));
   };
   
   const resetUploadForm = () => {
@@ -178,7 +182,7 @@ export default function AdminPage() {
     setSemester('');
     setYear('');
     setTags([]);
-    setFile(null);
+    setFiles([]);
     setDownloadUrl('');
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -198,22 +202,22 @@ export default function AdminPage() {
         toast({ title: "Error", description: "Please provide a download link for software tools.", variant: "destructive" });
         return;
     }
-    if (category !== 'software-tools' && !file) {
-        toast({ title: "Error", description: "Please select a file to upload.", variant: "destructive" });
+    if (category !== 'software-tools' && files.length === 0) {
+        toast({ title: "Error", description: "Please select at least one file to upload.", variant: "destructive" });
         return;
     }
     setIsUploading(true);
 
-    const processUpload = async (base64Content?: string) => {
-        const fileName = (file?.name || title).replace(/ /g, '-').toLowerCase() + (file ? `.${file.name.split('.').pop()}` : '.json');
-        const filePath = `${category}/${fileName}`;
+    const processUpload = async (fileContents: {name: string, content: string}[]) => {
+        const folderName = title.replace(/ /g, '-').toLowerCase();
+        const folderPath = `${category}/${folderName}`;
 
         try {
             const result = await uploadFile({
                 githubToken: githubToken,
                 repository: 'Codsach/codsach-resources',
-                filePath: filePath,
-                fileContent: base64Content,
+                folderPath: folderPath,
+                files: fileContents,
                 commitMessage: `feat: Add ${title}`,
                 metadata: {
                     title,
@@ -243,20 +247,31 @@ export default function AdminPage() {
         }
     };
     
-    if (file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const base64Content = (reader.result as string).split(',')[1];
-            processUpload(base64Content);
-        };
-        reader.onerror = () => {
-             toast({ title: "File Read Error", description: "Could not read the selected file.", variant: "destructive" });
-             setIsUploading(false);
-        };
+    if (files.length > 0) {
+        const filePromises = files.map(file => {
+            return new Promise<{name: string, content: string}>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const base64Content = (reader.result as string).split(',')[1];
+                    resolve({ name: file.name, content: base64Content });
+                };
+                reader.onerror = (error) => {
+                    reject(error);
+                };
+            });
+        });
+
+        try {
+            const fileContents = await Promise.all(filePromises);
+            processUpload(fileContents);
+        } catch (error) {
+            toast({ title: "File Read Error", description: "Could not read the selected files.", variant: "destructive" });
+            setIsUploading(false);
+        }
     } else {
         // Handle metadata-only upload (for software tools)
-        processUpload();
+        processUpload([]);
     }
   };
   
@@ -270,12 +285,12 @@ export default function AdminPage() {
         throw new Error("Could not determine resource category.");
       }
       
-      const filePath = `${category}/${resourceToDelete.fileName}`;
+      const folderPath = `${category}/${resourceToDelete.folderName}`;
 
       const result = await deleteResource({
         githubToken,
         repository: 'Codsach/codsach-resources',
-        filePath: filePath,
+        folderPath: folderPath,
       });
 
       if (result.success) {
@@ -283,7 +298,7 @@ export default function AdminPage() {
           title: 'Success',
           description: `Successfully deleted "${resourceToDelete.title}".`,
         });
-        setAllResources(allResources.filter(r => r.fileName !== resourceToDelete.fileName));
+        setAllResources(allResources.filter(r => r.folderName !== resourceToDelete.folderName));
       } else {
         toast({
           title: 'Deletion Failed',
@@ -323,13 +338,12 @@ export default function AdminPage() {
         if (!category) {
             throw new Error("Could not determine resource category.");
         }
-        const filePath = `${category}/${resourceToEdit.fileName}`;
+        const folderPath = `${category}/${resourceToEdit.folderName}`;
         
         const result = await uploadFile({
             githubToken: githubToken,
             repository: 'Codsach/codsach-resources',
-            filePath: filePath,
-            // fileContent is optional, so we omit it for metadata-only updates
+            folderPath: folderPath,
             commitMessage: `feat: Update metadata for ${editTitle}`,
             metadata: {
               title: editTitle,
@@ -339,7 +353,7 @@ export default function AdminPage() {
               year: category === 'question-papers' ? editYear : undefined,
               tags: resourceToEdit.tags,
               keywords: resourceToEdit.keywords,
-              downloadUrl: category === 'software-tools' ? editDownloadUrl : resourceToEdit.downloadUrl,
+              downloadUrl: category === 'software-tools' ? editDownloadUrl : undefined,
             }
         });
 
@@ -527,27 +541,35 @@ export default function AdminPage() {
                     </div>
                 ) : (
                     <div>
-                        <Label htmlFor="file-upload">File *</Label>
+                        <Label htmlFor="file-upload">Files *</Label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                             <Upload className="mx-auto h-12 w-12 text-gray-400" />
                             <input
                             type="file"
+                            multiple
                             ref={fileInputRef}
                             onChange={handleFileChange}
                             className="hidden"
                             id="file-upload"
                             />
-                            {file ? (
-                                <div className='mt-2 text-sm text-gray-600'>
-                                    <p>Selected file: {file.name}</p>
-                                    <Button variant="link" onClick={() => {
-                                        setFile(null);
-                                        if(fileInputRef.current) fileInputRef.current.value = '';
-                                    }}>Remove</Button>
+                            {files.length > 0 ? (
+                                <div className='mt-4 space-y-2'>
+                                    {files.map(file => (
+                                        <div key={file.name} className='flex items-center justify-between bg-muted p-2 rounded-md'>
+                                            <div className='flex items-center gap-2 text-sm'>
+                                                <FileText className='h-4 w-4 text-muted-foreground' />
+                                                <span className='font-medium'>{file.name}</span>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className='h-6 w-6' onClick={() => handleRemoveFile(file.name)}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button variant="link" onClick={() => document.getElementById('file-upload')?.click()}>Add more files</Button>
                                 </div>
                             ) : (
                                 <div className='mt-4'>
-                                <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose File</Button>
+                                <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose Files</Button>
                                 <p className="mt-2 text-sm text-gray-600">or drag and drop</p>
                                 <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
                                 </div>
@@ -600,8 +622,8 @@ export default function AdminPage() {
                             <TableRow>
                                 <TableHead className="w-[40%]">Resource</TableHead>
                                 <TableHead>Category</TableHead>
+                                <TableHead>Files</TableHead>
                                 <TableHead>Upload Date</TableHead>
-                                <TableHead>Size</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -622,14 +644,14 @@ export default function AdminPage() {
                                         <TableCell>
                                             <Badge variant="outline" className={`${categoryColors[resource.tags[0]] || ''} border-none`}>{getCategoryName(resource.tags[0])}</Badge>
                                         </TableCell>
+                                        <TableCell>{resource.files?.length || (resource.downloadUrl ? 1 : 0)}</TableCell>
                                         <TableCell>{resource.date}</TableCell>
-                                        <TableCell>{resource.size}</TableCell>
                                         <TableCell className="flex items-center gap-2">
                                             <Button variant="ghost" size="icon" asChild>
-                                                <Link href={resource.downloadUrl} target="_blank"><Eye className="h-4 w-4" /></Link>
+                                                <Link href={resource.downloadUrl || '#'} target="_blank"><Eye className="h-4 w-4" /></Link>
                                             </Button>
                                             
-                                            <Dialog open={isEditModalOpen && resourceToEdit?.fileName === resource.fileName} onOpenChange={(open) => { if(!open) { setIsEditModalOpen(false); setResourceToEdit(null); } }}>
+                                            <Dialog open={isEditModalOpen && resourceToEdit?.folderName === resource.folderName} onOpenChange={(open) => { if(!open) { setIsEditModalOpen(false); setResourceToEdit(null); } }}>
                                                 <DialogTrigger asChild>
                                                     <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(resource)}>
                                                         <Edit className="h-4 w-4" />
@@ -700,7 +722,7 @@ export default function AdminPage() {
                                                       <AlertDialogDescription>
                                                         This action cannot be undone. This will permanently delete the resource
                                                         <span className='font-bold'> {resourceToDelete?.title} </span> 
-                                                        and its associated metadata file from your GitHub repository.
+                                                        and all its associated files from your GitHub repository.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>

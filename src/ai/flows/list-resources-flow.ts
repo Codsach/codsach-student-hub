@@ -20,6 +20,12 @@ const ListResourcesInputSchema = z.object({
 });
 export type ListResourcesInput = z.infer<typeof ListResourcesInputSchema>;
 
+const FileSchema = z.object({
+    name: z.string(),
+    size: z.string(),
+    downloadUrl: z.string().nullable(),
+});
+
 const ResourceSchema = z.object({
     title: z.string(),
     description: z.string(),
@@ -29,10 +35,10 @@ const ResourceSchema = z.object({
     year: z.string().optional(),
     keywords: z.array(z.string()),
     date: z.string(),
-    size: z.string(),
     downloads: z.number(),
-    downloadUrl: z.string(),
-    fileName: z.string(),
+    files: z.array(FileSchema),
+    folderName: z.string(),
+    downloadUrl: z.string().optional().nullable(),
 });
 
 const ListResourcesOutputSchema = z.array(ResourceSchema);
@@ -57,32 +63,26 @@ const listResourcesFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      const { data: files } = await octokit.rest.repos.getContent({
+      const { data: resourceFolders } = await octokit.rest.repos.getContent({
         owner,
         repo,
         path: input.category,
       });
 
-      if (!Array.isArray(files)) {
+      if (!Array.isArray(resourceFolders)) {
         return [];
       }
       
-      const jsonFiles = files.filter(file => file.name.endsWith('.json') && file.type === 'file');
+      const directories = resourceFolders.filter(item => item.type === 'dir');
 
-      const resources = await Promise.all(jsonFiles.map(async (jsonFile: any) => {
+      const resources = await Promise.all(directories.map(async (dir: any) => {
         let metadata: any = {};
-        let fileDetails: any = {
-            size: jsonFile.size,
-            name: jsonFile.name.replace('.json', ''),
-            path: jsonFile.path.replace('.json', ''),
-            download_url: null,
-        };
-
+        
         try {
             const { data: metadataFile } = await octokit.rest.repos.getContent({
                 owner,
                 repo,
-                path: jsonFile.path,
+                path: `${dir.path}/metadata.json`,
             });
 
             if ('content' in metadataFile) {
@@ -90,37 +90,28 @@ const listResourcesFlow = ai.defineFlow(
                 metadata = JSON.parse(metadataContent);
             }
         } catch (e) {
-            console.error(`Error fetching metadata for ${jsonFile.name}:`, e);
-            // If we can't get metadata, skip this resource
+            console.error(`Error fetching metadata for ${dir.name}:`, e);
             return null;
         }
 
-        // For non-software tools, try to get the corresponding file details
-        if (input.category !== 'software-tools') {
-            try {
-                 const { data: resourceFile } = await octokit.rest.repos.getContent({
-                    owner,
-                    repo,
-                    path: fileDetails.path,
-                 });
-                 if (!Array.isArray(resourceFile)) {
-                     fileDetails = resourceFile;
-                 }
-            } catch(e) {
-                console.log(`No corresponding resource file found for ${jsonFile.name}, maybe it's metadata only.`);
-            }
-        }
-        
+        const { data: dirContents } = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path: dir.path,
+        });
+
+        const resourceFiles = Array.isArray(dirContents) ? dirContents.filter(item => item.name !== 'metadata.json') : [];
+
         const commitResponse = await octokit.rest.repos.listCommits({
             owner,
             repo,
-            path: jsonFile.path,
+            path: `${dir.path}/metadata.json`,
             per_page: 1,
         });
         const lastCommit = commitResponse.data[0];
 
         return {
-          title: metadata.title || fileDetails.name.replace(/[-_]/g, ' '),
+          title: metadata.title || dir.name.replace(/[-_]/g, ' '),
           description: metadata.description || 'No description available.',
           tags: metadata.tags || [input.category],
           subject: metadata.subject,
@@ -128,19 +119,22 @@ const listResourcesFlow = ai.defineFlow(
           year: metadata.year,
           keywords: metadata.keywords || [],
           date: lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString(),
-          size: `${(fileDetails.size / 1024 / 1024).toFixed(2)} MB`,
-          downloads: 0, // Download count would need a separate tracking mechanism
-          downloadUrl: metadata.downloadUrl || fileDetails.download_url,
-          fileName: fileDetails.name,
+          downloads: 0, 
+          folderName: dir.name,
+          downloadUrl: metadata.downloadUrl,
+          files: resourceFiles.map((file: any) => ({
+            name: file.name,
+            size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+            downloadUrl: file.download_url,
+          }))
         };
       }));
 
-      // Filter out any null results from skipped resources
       return resources.filter((r): r is ListResourcesOutput[0] => r !== null);
 
     } catch (error: any) {
        if (error.status === 404) {
-        return []; // Directory doesn't exist, return empty array
+        return []; 
       }
       console.error('Failed to list resources from GitHub:', error);
       return [];

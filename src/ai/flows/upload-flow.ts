@@ -11,7 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { Octokit } from 'octokit';
 
-export const UploadFileInputSchema = z.object({
+const UploadFileInputSchema = z.object({
   githubToken: z.string().describe('The GitHub personal access token.'),
   repository: z
     .string()
@@ -26,7 +26,7 @@ export const UploadFileInputSchema = z.object({
 });
 export type UploadFileInput = z.infer<typeof UploadFileInputSchema>;
 
-export const UploadFileOutputSchema = z.object({
+const UploadFileOutputSchema = z.object({
   success: z.boolean().describe('Whether the file upload was successful.'),
   url: z.string().optional().describe('The URL of the uploaded file.'),
   error: z.string().optional().describe('An error message if the upload failed.'),

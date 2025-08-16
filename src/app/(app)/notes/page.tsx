@@ -10,24 +10,19 @@ async function NotesPageData() {
 
     try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) {
-            throw new Error("GitHub token is not configured on the server.");
+        if (githubToken) {
+            resources = await listResources({
+                githubToken,
+                repository: 'Codsach/codsach-resources',
+                category: 'notes',
+            });
         }
-        resources = await listResources({
-            githubToken,
-            repository: 'Codsach/codsach-resources',
-            category: 'notes',
-        });
     } catch (e: any) {
         console.error("Failed to fetch notes on server:", e);
-        error = "Could not fetch resources from GitHub. Please ensure your GitHub token is configured correctly.";
+        error = "Could not fetch resources from GitHub on the server.";
     }
 
-    if (error) {
-        return <div className="text-center py-12 text-red-500">{error}</div>;
-    }
-
-    return <NotesClient initialResources={resources} />;
+    return <NotesClient initialResources={resources} serverError={error} />;
 }
 
 

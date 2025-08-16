@@ -38,3 +38,61 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes move {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(20vw, 30vh) rotate(90deg) scale(1.2);
+  }
+  50% {
+    transform: translate(50vw, -10vh) rotate(180deg) scale(1.5);
+  }
+  75% {
+    transform: translate(-30vw, 20vh) rotate(270deg) scale(1.2);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg) scale(1);
+  }
+}
+
+.background-animation {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #50B4F2 100%);
+  overflow: hidden;
+}
+
+.background-animation div {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.2;
+}
+
+.circle-1 {
+  width: 40vmax;
+  height: 40vmax;
+  background: radial-gradient(circle, #7950F2, #50B4F2);
+  top: 10%;
+  left: 10%;
+  animation: move 25s infinite alternate;
+}
+
+.circle-2 {
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(circle, #50B4F2, #7950F2);
+  bottom: 5%;
+  right: 5%;
+  animation: move 30s infinite alternate-reverse;
+}
+
+.circle-3 {
+  width: 30vmax;
+  height: 30vmax;
+  background: radial-gradient(circle, #7950F2, #50B4F2);
+  bottom: 40%;
+  left: 30%;
+  animation: move 20s infinite alternate;
+}

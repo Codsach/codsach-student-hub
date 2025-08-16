@@ -16,7 +16,7 @@ const DeleteResourceInputSchema = z.object({
   repository: z
     .string()
     .describe('The GitHub repository in the format "owner/repo".'),
-  filePath: z.string().describe('The path to the resource file to be deleted.'),
+  folderPath: z.string().describe('The path to the resource folder to be deleted.'),
 });
 export type DeleteResourceInput = z.infer<typeof DeleteResourceInputSchema>;
 
@@ -41,53 +41,37 @@ const deleteResourceFlow = ai.defineFlow(
   async (input) => {
     const octokit = new Octokit({ auth: input.githubToken });
     const [owner, repo] = input.repository.split('/');
-    const metadataPath = input.filePath.replace(/\.[^/.]+$/, "") + '.json';
 
     try {
-       // Get the SHA of the file to be deleted
-      const { data: fileData } = await octokit.rest.repos.getContent({
+      // Get all files in the directory
+      const { data: files } = await octokit.rest.repos.getContent({
         owner,
         repo,
-        path: input.filePath,
+        path: input.folderPath,
       });
 
-      if (Array.isArray(fileData)) throw new Error("Path resolved to a directory");
+      if (!Array.isArray(files)) {
+        throw new Error("Path is not a directory");
+      }
 
-      // Delete the main resource file
-      await octokit.rest.repos.deleteFile({
-        owner,
-        repo,
-        path: input.filePath,
-        message: `feat: Delete resource ${input.filePath}`,
-        sha: fileData.sha,
-      });
-
-      // Get the SHA of the metadata file to be deleted
-      const { data: metadataFileData } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: metadataPath,
-      });
-
-      if (Array.isArray(metadataFileData)) throw new Error("Metadata path resolved to a directory");
-      
-      // Delete the metadata file
-      await octokit.rest.repos.deleteFile({
-        owner,
-        repo,
-        path: metadataPath,
-        message: `feat: Delete metadata for ${input.filePath}`,
-        sha: metadataFileData.sha,
-      });
+      // Delete each file in the directory
+      for (const file of files) {
+        await octokit.rest.repos.deleteFile({
+          owner,
+          repo,
+          path: file.path,
+          message: `feat: Delete resource file ${file.path}`,
+          sha: file.sha,
+        });
+      }
 
       return { success: true };
     } catch (error: any) {
       console.error('GitHub Deletion Error:', error);
-       // If one of the files is already gone, we can consider it a partial success
       if (error.status === 404) {
-          return { success: true, error: "One of the files to delete was not found, but proceeding." };
+          return { success: true, error: "Resource folder not found, assuming already deleted." };
       }
-      return { success: false, error: error.message || 'Failed to delete resource from GitHub.' };
+      return { success: false, error: error.message || 'Failed to delete resource folder from GitHub.' };
     }
   }
 );

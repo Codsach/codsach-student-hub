@@ -11,18 +11,18 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { Octokit } from 'octokit';
 
+const FileInputSchema = z.object({
+  name: z.string(),
+  content: z.string().describe('The base64 encoded content of the file.'),
+});
+
 const UploadFileInputSchema = z.object({
   githubToken: z.string().describe('The GitHub personal access token.'),
   repository: z
     .string()
     .describe('The GitHub repository in the format "owner/repo".'),
-  filePath: z
-    .string()
-    .describe('The path where the file will be stored in the repository.'),
-  fileContent: z
-    .string()
-    .optional()
-    .describe('The content of the file, base64 encoded. Optional for metadata-only updates.'),
+  folderPath: z.string().describe('The path to the folder where the resource will be stored.'),
+  files: z.array(FileInputSchema).optional().describe('An array of files to upload.'),
   commitMessage: z.string().describe('The commit message for the file upload.'),
   metadata: z.object({
     title: z.string(),
@@ -79,36 +79,28 @@ const uploadFileFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      let fileUrl: string | undefined;
-
-      // 1. Upload/Update the actual file if content is provided
-      if (input.fileContent) {
-          const fileSha = await getFileSha(octokit, owner, repo, input.filePath);
-          const fileResponse = await octokit.rest.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            path: input.filePath,
-            message: input.commitMessage,
-            content: input.fileContent,
-            sha: fileSha,
-          });
-          fileUrl = fileResponse.data.content?.html_url;
+      // 1. Upload/Update the actual files if content is provided
+      if (input.files && input.files.length > 0) {
+        for (const file of input.files) {
+            const filePath = `${input.folderPath}/${file.name}`;
+            const fileSha = await getFileSha(octokit, owner, repo, filePath);
+            await octokit.rest.repos.createOrUpdateFileContents({
+                owner,
+                repo,
+                path: filePath,
+                message: `${input.commitMessage} - ${file.name}`,
+                content: file.content,
+                sha: fileSha,
+            });
+        }
       }
 
-
       // 2. Upload/Update the metadata file
-      const metadataPath = input.filePath.replace(/\.[^/.]+$/, "") + '.json';
-      
-      const fullMetadata = {
-          ...input.metadata,
-          // If we uploaded a file, make sure the downloadUrl points to it, otherwise use the one from input
-          downloadUrl: fileUrl || input.metadata.downloadUrl,
-      };
-      
-      const metadataContent = Buffer.from(JSON.stringify(fullMetadata, null, 2)).toString('base64');
+      const metadataPath = `${input.folderPath}/metadata.json`;
+      const metadataContent = Buffer.from(JSON.stringify(input.metadata, null, 2)).toString('base64');
       const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
       
-      await octokit.rest.repos.createOrUpdateFileContents({
+      const metadataResponse = await octokit.rest.repos.createOrUpdateFileContents({
           owner,
           repo,
           path: metadataPath,
@@ -119,7 +111,7 @@ const uploadFileFlow = ai.defineFlow(
 
       return {
         success: true,
-        url: fileUrl || input.metadata.downloadUrl,
+        url: metadataResponse.data.content?.html_url,
       };
     } catch (error: any) {
       console.error("GitHub Upload Error:", error);

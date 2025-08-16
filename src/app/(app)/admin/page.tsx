@@ -389,10 +389,10 @@ export default function AdminPage() {
   };
   
   const categoryColors: { [key: string]: string } = {
-    'notes': 'bg-green-100 text-green-800',
-    'lab-programs': 'bg-blue-100 text-blue-800',
-    'question-papers': 'bg-purple-100 text-purple-800',
-    'software-tools': 'bg-orange-100 text-orange-800',
+    'notes': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+    'lab-programs': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+    'question-papers': 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+    'software-tools': 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   };
   
   const getCategoryName = (tag: string) => {
@@ -447,12 +447,12 @@ export default function AdminPage() {
                         disabled={isConnecting || isConnected}
                     />
                 </div>
-                <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 space-y-2'>
+                <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-300 space-y-2'>
                     <div className='font-semibold flex items-center gap-2'><Info className='h-4 w-4'/>How to get a GitHub Token:</div>
                     <ol className='list-decimal list-inside space-y-1'>
                         <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
                         <li>Click "Generate new token (classic)"</li>
-                        <li>Select scopes: <span className='font-mono bg-yellow-100 px-1 rounded'>repo</span> (Full control of private repositories)</li>
+                        <li>Select scopes: <span className='font-mono bg-yellow-100 dark:bg-yellow-900/50 px-1 rounded'>repo</span> (Full control of private repositories)</li>
                         <li>Copy the generated token and paste it above</li>
                         <li><Link href="https://github.com/settings/tokens/new" target="_blank" className='text-primary hover:underline'>Create Token</Link></li>
                     </ol>
@@ -542,8 +542,8 @@ export default function AdminPage() {
                 ) : (
                     <div>
                         <Label htmlFor="file-upload">Files *</Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                             <input
                             type="file"
                             multiple
@@ -570,8 +570,8 @@ export default function AdminPage() {
                             ) : (
                                 <div className='mt-4'>
                                 <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose Files</Button>
-                                <p className="mt-2 text-sm text-gray-600">or drag and drop</p>
-                                <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
+                                <p className="mt-2 text-sm text-muted-foreground">or drag and drop</p>
+                                <p className="text-xs text-muted-foreground">PDF, DOC, ZIP, etc. (Max 25MB)</p>
                                 </div>
                             )}
                         </div>

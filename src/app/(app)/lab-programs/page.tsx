@@ -95,7 +95,7 @@ export default function LabProgramsPage() {
         <p className="text-muted-foreground mt-1">Browse all lab programs</p>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+      <div className="bg-card p-6 rounded-lg shadow-sm mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label htmlFor="subject" className="text-sm font-medium">Subject</label>

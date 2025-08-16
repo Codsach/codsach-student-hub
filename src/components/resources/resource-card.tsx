@@ -68,7 +68,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
 
   return (
     <>
-    <Card className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+    <Card className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardContent className="p-6 flex-grow">
         <h3 className="text-xl font-bold mb-2">{title}</h3>
         <p className="text-muted-foreground mb-4 h-12 line-clamp-2">{description}</p>

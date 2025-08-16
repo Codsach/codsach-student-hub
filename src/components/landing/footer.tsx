@@ -32,11 +32,10 @@ export function Footer() {
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary group">
+            <Link href="/" className="flex items-center gap-2 font-bold text-2xl group">
               <Logo />
-              <h1 className="font-headline text-2xl font-bold tracking-tight">
-                <span className="text-primary">Cod</span>
-                <span className="text-[#50B4F2]">sach</span>
+              <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
+                Codsach
               </h1>
             </Link>
             <p className="text-sm max-w-xs">

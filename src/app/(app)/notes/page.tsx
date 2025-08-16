@@ -77,9 +77,12 @@ function NotesPageContent() {
     }
      // Search
     if (searchQuery) {
+        const lowerCaseQuery = searchQuery.toLowerCase();
         resources = resources.filter(r => 
-            r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.description.toLowerCase().includes(searchQuery.toLowerCase())
+            r.title.toLowerCase().includes(lowerCaseQuery) ||
+            r.description.toLowerCase().includes(lowerCaseQuery) ||
+            r.tags.some(t => t.toLowerCase().includes(lowerCaseQuery)) ||
+            (r.keywords && r.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery)))
         );
     }
     

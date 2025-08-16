@@ -40,6 +40,11 @@ export function Header() {
       setIsAdminLoggedIn(!!sessionStorage.getItem('isAdminLoggedIn'));
     }
   }, []);
+  
+    useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+  }, [pathname, searchParams]);
+
 
   const handleLogout = () => {
     sessionStorage.removeItem('isAdminLoggedIn');
@@ -47,26 +52,15 @@ export function Header() {
     router.push('/login');
   };
 
-  const handleSearch = (e: React.FormEvent<HTMLInputElement>) => {
-      const query = e.currentTarget.value;
-      setSearchQuery(query);
-      
-      const isHomePage = pathname === '/';
-      const targetPath = isHomePage ? '/notes' : pathname;
-
-      const params = new URLSearchParams(searchParams);
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const query = e.currentTarget.search.value;
       if (query) {
-        params.set('q', query);
+        router.push(`/search?q=${encodeURIComponent(query)}`);
       } else {
-        params.delete('q');
+        router.push('/search');
       }
-      router.replace(`${targetPath}?${params.toString()}`);
   }
-  
-  useEffect(() => {
-    setSearchQuery(searchParams.get('q') || '');
-  }, [pathname, searchParams]);
-
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -79,7 +73,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
               <Logo />
                <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
@@ -100,16 +94,18 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center justify-end gap-4 md:flex">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-                placeholder="Search resources..." 
-                className="pl-10 w-48 bg-muted border-none rounded-full"
-                value={searchQuery}
-                onInput={handleSearch}
-             />
-          </div>
+        <div className="hidden items-center justify-end gap-2 md:flex">
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                  name="search"
+                  placeholder="Search resources..." 
+                  className="pl-10 w-48 bg-muted border-none rounded-full"
+                  defaultValue={searchQuery}
+              />
+            </div>
+          </form>
           <ThemeToggle />
           {isAdminLoggedIn ? (
             <>
@@ -157,15 +153,17 @@ export function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto p-4 border-t flex flex-col gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search resources..." 
-                        className="pl-10 w-full" 
-                        value={searchQuery}
-                        onInput={handleSearch}
-                    />
-                  </div>
+                  <form onSubmit={handleSearch}>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                          name="search"
+                          placeholder="Search resources..." 
+                          className="pl-10 w-full" 
+                          defaultValue={searchQuery}
+                      />
+                    </div>
+                  </form>
                    {isAdminLoggedIn ? (
                       <div className='flex flex-col gap-2'>
                         <Button asChild className='rounded-full' variant="outline">

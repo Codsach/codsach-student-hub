@@ -8,7 +8,6 @@ import { Calendar, HardDrive, Download, Tag, FileText, Eye, X } from 'lucide-rea
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { downloadFile } from '@/lib/download';
 
 interface ResourceFile {
     name: string;
@@ -43,11 +42,6 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
         default: return tag.toUpperCase();
     }
   }
-
-  const handleDownload = (url: string | null, filename: string) => {
-    if (!url) return;
-    downloadFile(url, filename);
-  };
   
   const totalSize = files.reduce((acc, file) => acc + parseFloat(file.size), 0).toFixed(2);
   
@@ -95,8 +89,10 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                 <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl}>
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
-                <Button size="sm" onClick={() => handleDownload(file.downloadUrl, file.name)} disabled={!file.downloadUrl}>
-                    <Download className="mr-2 h-4 w-4" /> Download
+                <Button size="sm" asChild disabled={!file.downloadUrl}>
+                    <a href={file.downloadUrl || '#'} download={file.name}>
+                        <Download className="mr-2 h-4 w-4" /> Download
+                    </a>
                 </Button>
               </div>
             </div>

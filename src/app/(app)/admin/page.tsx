@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,10 +13,26 @@ import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+
+  useEffect(() => {
+    setIsClient(true);
+    const isLoggedIn = sessionStorage.getItem('isAdminLoggedIn');
+    if (!isLoggedIn) {
+      router.push('/login');
+    }
+  }, [router]);
+
+  if (!isClient) {
+    return null; // Or a loading spinner
+  }
 
   const handleAddTag = () => {
     if (tagInput && !tags.includes(tagInput)) {
@@ -70,8 +86,8 @@ export default function AdminPage() {
   const totalDownloads = resources.reduce((sum, resource) => sum + resource.downloads, 0);
 
   const handleLogout = () => {
-    // In a real app, you'd clear session/token here
-    window.location.href = '/login';
+    sessionStorage.removeItem('isAdminLoggedIn');
+    router.push('/login');
   };
 
 
@@ -83,11 +99,6 @@ export default function AdminPage() {
             <p className="text-muted-foreground mt-1">Manage and upload resources for Codsach</p>
         </div>
         <div className='flex items-center gap-4'>
-            <Button asChild variant="outline">
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
-              </Link>
-            </Button>
             <Button variant="destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" /> Logout
             </Button>

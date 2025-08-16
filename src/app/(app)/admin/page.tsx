@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminPage() {
   const [tags, setTags] = useState<string[]>([]);
@@ -26,6 +28,47 @@ export default function AdminPage() {
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
+  
+  const resources = [
+    {
+      title: 'Data Structures and Algorithms...',
+      description: 'Complete implementation of all DSA lab programs including sortin... dsa-lab-programs.zip • 2.5 MB',
+      category: 'Lab Programs',
+      uploadDate: 'Jan 15, 2024',
+      downloads: 245,
+    },
+    {
+      title: 'Database Management Systems...',
+      description: 'Comprehensive notes covering DBMS concepts, SQL, normalizatio... dbms-notes.pdf • 5.2 MB',
+      category: 'Notes',
+      uploadDate: 'Jan 10, 2024',
+      downloads: 189,
+    },
+    {
+      title: 'MCA Entrance Previous Year...',
+      description: 'Collection of previous year question papers for MCA entrance... mca-entrance-papers.pdf • 8.1 MB',
+      category: 'Question Papers',
+      uploadDate: 'Jan 8, 2024',
+      downloads: 456,
+    },
+    {
+      title: 'Visual Studio Code Setup Guide',
+      description: 'Complete setup guide for VS Code with essential extensions for MCA... vscode-setup.pdf • 1.8 MB',
+      category: 'Software Tools',
+      uploadDate: 'Jan 5, 2024',
+      downloads: 123,
+    },
+  ];
+
+  const categoryColors: { [key: string]: string } = {
+    'Lab Programs': 'bg-blue-100 text-blue-800',
+    'Notes': 'bg-green-100 text-green-800',
+    'Question Papers': 'bg-purple-100 text-purple-800',
+    'Software Tools': 'bg-orange-100 text-orange-800',
+  };
+
+  const totalDownloads = resources.reduce((sum, resource) => sum + resource.downloads, 0);
+
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -41,7 +84,7 @@ export default function AdminPage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="upload">
+      <Tabs defaultValue="manage">
         <TabsList className="mb-6">
           <TabsTrigger value="upload">Upload Resource</TabsTrigger>
           <TabsTrigger value="manage">Manage Resources</TabsTrigger>
@@ -155,10 +198,73 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle>Manage Resources</CardTitle>
-              <CardDescription>Edit or delete existing resources.</CardDescription>
+              <CardDescription>View, edit, and delete uploaded resources.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p>Manage resources section coming soon.</p>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Search resources..." className="pl-10" />
+                    </div>
+                    <Select>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="lab-programs">Lab Programs</SelectItem>
+                            <SelectItem value="notes">Notes</SelectItem>
+                            <SelectItem value="question-papers">Question Papers</SelectItem>
+                            <SelectItem value="software-tools">Software Tools</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="border rounded-lg">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[40%]">Resource</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Upload Date</TableHead>
+                                <TableHead>Downloads</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {resources.map((resource, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <div className="font-medium">{resource.title}</div>
+                                        <div className="text-sm text-muted-foreground">{resource.description}</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className={`${categoryColors[resource.category]} border-none`}>{resource.category}</Badge>
+                                    </TableCell>
+                                    <TableCell>{resource.uploadDate}</TableCell>
+                                    <TableCell>{resource.downloads}</TableCell>
+                                    <TableCell className="flex items-center gap-2">
+                                        <Button variant="ghost" size="icon">
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon">
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
+                    <div>
+                        Total Resources: {resources.length} <br />
+                        Showing {resources.length} resources
+                    </div>
+                    <div>Total Downloads: {totalDownloads.toLocaleString()}</div>
+                </div>
             </CardContent>
           </Card>
         </TabsContent>

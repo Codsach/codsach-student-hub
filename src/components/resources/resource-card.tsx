@@ -149,11 +149,11 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
     </Card>
 
     <Dialog open={!!viewFileUrl} onOpenChange={(open) => { if (!open) setViewFileUrl(null); }}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0">
-            <DialogHeader className="p-6 pb-2">
+        <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col">
+            <DialogHeader className="p-6">
               <DialogTitle>{viewFileName}</DialogTitle>
             </DialogHeader>
-            <div className="h-full w-full">
+            <div className="flex-1 w-full">
               <iframe
                   src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
                   className="h-full w-full"

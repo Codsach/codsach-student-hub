@@ -32,6 +32,7 @@ const UploadFileInputSchema = z.object({
     year: z.string().optional(),
     tags: z.array(z.string()),
     keywords: z.array(z.string()).optional(),
+    downloadUrl: z.string().optional(),
   }).describe("Metadata associated with the file."),
 });
 export type UploadFileInput = z.infer<typeof UploadFileInputSchema>;
@@ -97,7 +98,14 @@ const uploadFileFlow = ai.defineFlow(
 
       // 2. Upload/Update the metadata file
       const metadataPath = input.filePath.replace(/\.[^/.]+$/, "") + '.json';
-      const metadataContent = Buffer.from(JSON.stringify(input.metadata, null, 2)).toString('base64');
+      
+      const fullMetadata = {
+          ...input.metadata,
+          // If we uploaded a file, make sure the downloadUrl points to it, otherwise use the one from input
+          downloadUrl: fileUrl || input.metadata.downloadUrl,
+      };
+      
+      const metadataContent = Buffer.from(JSON.stringify(fullMetadata, null, 2)).toString('base64');
       const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
       
       await octokit.rest.repos.createOrUpdateFileContents({
@@ -111,7 +119,7 @@ const uploadFileFlow = ai.defineFlow(
 
       return {
         success: true,
-        url: fileUrl,
+        url: fileUrl || input.metadata.downloadUrl,
       };
     } catch (error: any) {
       console.error("GitHub Upload Error:", error);

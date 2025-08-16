@@ -1,5 +1,6 @@
+
 import Link from 'next/link';
-import { Twitter, Github, Linkedin } from 'lucide-react';
+import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
 
 const Logo = () => (
   <div className="relative w-8 h-8">
@@ -26,25 +27,10 @@ export function Footer() {
     { icon: <Linkedin className="h-5 w-5" />, href: '#' },
   ];
 
-  const footerSections = [
-    {
-      title: 'Company',
-      links: ['About', 'Features', 'Works', 'Career'],
-    },
-    {
-      title: 'Help',
-      links: ['Customer Support', 'Delivery Details', 'Terms & Conditions', 'Privacy Policy'],
-    },
-    {
-      title: 'Resources',
-      links: ['Free eBooks', 'Development Tutorial', 'How to - Blog', 'Youtube Playlist'],
-    }
-  ];
-
   return (
-    <footer className="bg-muted/20 text-muted-foreground">
+    <footer className="bg-background text-muted-foreground">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary group">
               <Logo />
@@ -66,18 +52,15 @@ export function Footer() {
               ))}
             </div>
           </div>
-          {footerSections.map(section => (
-            <div key={section.title}>
-              <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
-              <ul className="space-y-2">
-                {section.links.map(link => (
-                  <li key={link}>
-                    <Link href="#" className="text-sm hover:text-primary transition-colors">{link}</Link>
-                  </li>
-                ))}
-              </ul>
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="h-4 w-4" />
+              <a href="mailto:codsach@gmail.com" className="hover:text-primary transition-colors">
+                codsach@gmail.com
+              </a>
             </div>
-          ))}
+          </div>
         </div>
         <div className="mt-8 pt-8 border-t text-center text-sm">
            <p>&copy; {new Date().getFullYear()} Codsach. All rights reserved.</p>

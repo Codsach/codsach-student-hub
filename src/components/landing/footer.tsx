@@ -30,16 +30,16 @@ export function Footer() {
   return (
     <footer className="bg-background text-muted-foreground">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary group">
               <Logo />
               <span className="font-headline">Codsach</span>
             </Link>
-            <p className="text-sm">
+            <p className="text-sm max-w-xs">
               Your comprehensive resource hub for MCA studies.
             </p>
-            <div className="flex items-center gap-4 mt-4">
+            <div className="flex items-center gap-4 mt-2">
               {socialLinks.map((link, index) => (
                 <Link
                   key={index}

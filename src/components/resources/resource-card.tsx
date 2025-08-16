@@ -31,6 +31,19 @@ export function ResourceCard({ title, description, tags, keywords, date, size, d
     }
   }
 
+  const getDownloadLink = () => {
+    if (!downloadUrl) return '#';
+    // Check if it's a Google Drive link and convert it for direct download
+    if (downloadUrl.includes('drive.google.com')) {
+      const regex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+      const match = downloadUrl.match(regex);
+      if (match && match[1]) {
+        return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      }
+    }
+    return downloadUrl;
+  };
+
   return (
     <Card className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardContent className="p-6">
@@ -66,7 +79,7 @@ export function ResourceCard({ title, description, tags, keywords, date, size, d
             </div>
           </div>
           <Button asChild disabled={!downloadUrl}>
-            <Link href={downloadUrl || '#'} target="_blank" rel="noopener noreferrer">
+            <Link href={getDownloadLink()} target="_blank" rel="noopener noreferrer">
               <Download className="mr-2 h-4 w-4" /> Download
             </Link>
           </Button>

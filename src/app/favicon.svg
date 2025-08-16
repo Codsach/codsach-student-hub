@@ -1,0 +1,36 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .rect1, .rect2 {
+            animation-duration: 5s;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            transform-origin: center;
+        }
+        .rect1 {
+            animation-name: rotate-clockwise;
+        }
+        .rect2 {
+            animation-name: rotate-counter-clockwise;
+        }
+        @keyframes rotate-clockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes rotate-counter-clockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+    </style>
+    <rect class="rect1" x="50" y="50" width="100" height="100" rx="20" fill="url(#paint0_linear_favicon)"/>
+    <rect class="rect2" x="75" y="75" width="50" height="50" rx="10" fill="url(#paint1_linear_favicon)"/>
+    <defs>
+        <linearGradient id="paint0_linear_favicon" x1="50" y1="50" x2="150" y2="150" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7950F2"/>
+            <stop offset="1" stop-color="#50B4F2"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_favicon" x1="75" y1="75" x2="125" y2="125" gradientUnits="userSpaceOnUse">
+            <stop stop-color="white" stop-opacity="0.8"/>
+            <stop offset="1" stop-color="white" stop-opacity="0.5"/>
+        </linearGradient>
+    </defs>
+</svg>

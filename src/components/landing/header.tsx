@@ -10,40 +10,20 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const Logo = () => (
-  <svg
-    className="h-8 w-8"
-    viewBox="0 0 100 100"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: 'hsl(var(--primary) / 0.5)', stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
-    <circle
-      cx="50"
-      cy="50"
-      r="45"
-      fill="none"
-      stroke="url(#logoGradient)"
-      strokeWidth="10"
-      className="transition-all duration-300 group-hover:rotate-[360deg] origin-center"
-    />
-    <text
-      x="50%"
-      y="50%"
-      textAnchor="middle"
-      dy=".3em"
-      fontSize="40"
-      fill="hsl(var(--primary))"
-      fontFamily="sans-serif"
-      fontWeight="bold"
-      className="transition-all duration-300 group-hover:scale-110"
-    >
-      CS
-    </text>
-  </svg>
+    <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
+        <svg className="absolute w-full h-full animate-[spin_5s_linear_infinite]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="60" height="60" rx="12" stroke="url(#paint0_linear_logo_header)" strokeWidth="10"/>
+            <defs>
+                <linearGradient id="paint0_linear_logo_header" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="hsl(var(--primary))"/>
+                    <stop offset="1" stopColor="hsl(var(--primary)/0.5)"/>
+                </linearGradient>
+            </defs>
+        </svg>
+        <svg className="absolute w-full h-full animate-[spin_4s_linear_infinite_reverse]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="35" y="35" width="30" height="30" rx="6" stroke="hsl(var(--primary))" strokeWidth="8"/>
+        </svg>
+    </div>
 );
 
 

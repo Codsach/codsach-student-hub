@@ -24,7 +24,6 @@ const ResourceSchema = z.object({
     title: z.string(),
     description: z.string(),
     tags: z.array(z.string()),
-    // Adding subject and semester to be used for filtering
     subject: z.string().optional(),
     semester: z.string().optional(),
     keywords: z.array(z.string()),
@@ -32,6 +31,7 @@ const ResourceSchema = z.object({
     size: z.string(),
     downloads: z.number(),
     downloadUrl: z.string(),
+    fileName: z.string(),
 });
 
 const ListResourcesOutputSchema = z.array(ResourceSchema);
@@ -66,8 +66,7 @@ const listResourcesFlow = ai.defineFlow(
         return [];
       }
       
-      // Filter for actual resource files (not metadata .json files)
-      const resourceFiles = files.filter(file => !file.name.endsWith('.json'));
+      const resourceFiles = files.filter(file => !file.name.endsWith('.json') && file.type === 'file');
 
       const resources = await Promise.all(resourceFiles.map(async (file: any) => {
         const metadataPath = file.path.replace(/\.[^/.]+$/, "") + '.json';
@@ -109,11 +108,12 @@ const listResourcesFlow = ai.defineFlow(
           tags: metadata.tags,
           subject: metadata.subject,
           semester: metadata.semester,
-          keywords: metadata.keywords,
+          keywords: metadata.keywords || [],
           date: lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString(),
           size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
           downloads: 0, // Download count would need a separate tracking mechanism
           downloadUrl: file.download_url,
+          fileName: file.name,
         };
       }));
 

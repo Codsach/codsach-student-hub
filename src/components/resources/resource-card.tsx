@@ -35,7 +35,7 @@ export function ResourceCard({ title, description, tags, keywords, date, size, d
     if (!downloadUrl) return '#';
     
     if (downloadUrl.includes('drive.google.com')) {
-      const match = downloadUrl.match(/\/d\/(.*?)\//);
+      const match = downloadUrl.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/&?]+)/);
       if (match && match[1]) {
         const fileId = match[1];
         return `https://drive.google.com/uc?export=download&id=${fileId}`;

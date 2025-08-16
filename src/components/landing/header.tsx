@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BookOpen, Search, Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '../theme-toggle';
@@ -131,8 +131,9 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b">
+              <SheetHeader className="p-4 border-b">
+                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                <div className="flex items-center justify-between">
                    <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
                      <Logo />
                      <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
@@ -141,6 +142,8 @@ export function Header() {
                    </Link>
                    <ThemeToggle />
                 </div>
+              </SheetHeader>
+              <div className="flex flex-col h-full">
                 <nav className="flex flex-col gap-4 p-4">
                   {navLinks.map((link) => (
                     <Link

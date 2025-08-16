@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ThemeToggle } from '../theme-toggle';
 
 const Logo = () => (
     <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -76,6 +77,7 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search resources..." className="pl-10 w-48 bg-muted border-none rounded-full" />
           </div>
+          <ThemeToggle />
           {isAdminLoggedIn ? (
             <>
               <Button asChild className='rounded-full' variant="outline">
@@ -101,11 +103,14 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <div className="flex flex-col h-full">
-                <div className="flex items-center gap-2 font-bold text-xl p-4 border-b">
-                   <Logo />
-                   <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
-                    Codsach
-                  </h1>
+                <div className="flex items-center justify-between p-4 border-b">
+                   <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
+                     <Logo />
+                     <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
+                      Codsach
+                    </h1>
+                   </Link>
+                   <ThemeToggle />
                 </div>
                 <nav className="flex flex-col gap-4 p-4">
                   {navLinks.map((link) => (

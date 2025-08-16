@@ -23,6 +23,13 @@ const UploadFileInputSchema = z.object({
     .string()
     .describe('The content of the file, base64 encoded.'),
   commitMessage: z.string().describe('The commit message for the file upload.'),
+  metadata: z.object({
+    title: z.string(),
+    description: z.string(),
+    subject: z.string().optional(),
+    semester: z.string().optional(),
+    tags: z.array(z.string()),
+  }).describe("Metadata associated with the file."),
 });
 export type UploadFileInput = z.infer<typeof UploadFileInputSchema>;
 
@@ -52,7 +59,8 @@ const uploadFileFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      const response = await octokit.rest.repos.createOrUpdateFileContents({
+      // 1. Upload the actual file
+      const fileResponse = await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: input.filePath,
@@ -60,11 +68,24 @@ const uploadFileFlow = ai.defineFlow(
         content: input.fileContent,
       });
 
+      // 2. Upload the metadata file
+      const metadataPath = input.filePath.replace(/\.[^/.]+$/, "") + '.json';
+      const metadataContent = Buffer.from(JSON.stringify(input.metadata, null, 2)).toString('base64');
+      
+      await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path: metadataPath,
+          message: `feat: Add metadata for ${input.metadata.title}`,
+          content: metadataContent,
+      });
+
       return {
         success: true,
-        url: response.data.content?.html_url,
+        url: fileResponse.data.content?.html_url,
       };
     } catch (error: any) {
+      console.error("GitHub Upload Error:", error);
       return {
         success: false,
         error: error.message || 'Failed to upload file to GitHub.',

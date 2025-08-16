@@ -13,9 +13,10 @@ interface ResourceCardProps {
   date: string;
   size: string;
   downloads: number;
+  downloadUrl?: string;
 }
 
-export function ResourceCard({ title, description, tags, keywords, date, size, downloads }: ResourceCardProps) {
+export function ResourceCard({ title, description, tags, keywords, date, size, downloads, downloadUrl }: ResourceCardProps) {
   return (
     <Card className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardContent className="p-6">
@@ -47,8 +48,8 @@ export function ResourceCard({ title, description, tags, keywords, date, size, d
               <span>{downloads}</span>
             </div>
           </div>
-          <Button asChild>
-            <Link href="#">
+          <Button asChild disabled={!downloadUrl}>
+            <Link href={downloadUrl || '#'} target="_blank" rel="noopener noreferrer">
               <Download className="mr-2 h-4 w-4" /> Download
             </Link>
           </Button>

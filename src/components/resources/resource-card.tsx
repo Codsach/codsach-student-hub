@@ -8,6 +8,8 @@ import { Calendar, HardDrive, Download, Tag, FileText, Eye, X } from 'lucide-rea
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { downloadFile } from '@/lib/utils';
+
 
 interface ResourceFile {
     name: string;
@@ -32,6 +34,7 @@ interface ResourceCardProps {
 export function ResourceCard({ title, description, tags, keywords, date, downloads, files = [], downloadUrl, subject, semester, year }: ResourceCardProps) {
   const [viewFileUrl, setViewFileUrl] = useState<string | null>(null);
   const [viewFileName, setViewFileName] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
   
   const getCategoryName = (tag: string) => {
     switch (tag) {
@@ -51,6 +54,20 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
       setViewFileName(file.name);
     }
   }
+
+  const handleDownload = async (file: ResourceFile) => {
+    if (!file.downloadUrl) return;
+    setIsDownloading(file.name);
+    try {
+        await downloadFile(file.downloadUrl, file.name);
+    } catch (error) {
+        console.error("Download failed:", error);
+        // Fallback for browsers that might block the fetch, though it might open in a new tab
+        window.open(file.downloadUrl, '_blank');
+    } finally {
+        setIsDownloading(null);
+    }
+  };
 
   return (
     <>
@@ -89,10 +106,9 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                 <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl}>
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
-                <Button size="sm" asChild disabled={!file.downloadUrl}>
-                    <a href={file.downloadUrl || '#'} download={file.name}>
-                        <Download className="mr-2 h-4 w-4" /> Download
-                    </a>
+                <Button size="sm" onClick={() => handleDownload(file)} disabled={!file.downloadUrl || isDownloading === file.name}>
+                    <Download className={`mr-2 h-4 w-4 ${isDownloading === file.name ? 'animate-pulse' : ''}`} /> 
+                    {isDownloading === file.name ? 'Downloading...' : 'Download'}
                 </Button>
               </div>
             </div>

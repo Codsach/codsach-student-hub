@@ -96,7 +96,7 @@ function NotesPageContent() {
   }, [allResources, subjectFilter, semesterFilter, sortOrder, searchQuery]);
 
   const uniqueSubjects = ['all', ...Array.from(new Set(allResources.map(r => r.subject).filter(Boolean))) as string[]];
-  const semesters = ['all', '1', '2', '3', '4'];
+  const uniqueSemesters = ['all', ...Array.from(new Set(allResources.map(r => r.semester).filter(Boolean))) as string[]];
 
 
   return (
@@ -128,7 +128,7 @@ function NotesPageContent() {
                 <SelectValue placeholder="All Semesters" />
               </SelectTrigger>
               <SelectContent>
-                 {semesters.map(sem => (
+                 {uniqueSemesters.map(sem => (
                     <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
                 ))}
               </SelectContent>

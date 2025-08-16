@@ -10,11 +10,12 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
-import { ListFilter, Loader2 } from 'lucide-react';
+import { ListFilter, Loader2, SlidersHorizontal } from 'lucide-react';
 import { listResources, type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export function LabProgramsClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
   const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
@@ -110,52 +111,105 @@ export function LabProgramsClient({ initialResources, serverError }: { initialRe
         <p className="text-muted-foreground mt-1">Browse all lab programs</p>
       </div>
 
-      <div className="bg-card p-6 rounded-lg shadow-sm mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          <div>
-            <label htmlFor="subject" className="text-sm font-medium">Subject</label>
-            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-              <SelectTrigger id="subject">
-                <SelectValue placeholder="All Subjects" />
-              </SelectTrigger>
-              <SelectContent>
-                 {uniqueSubjects.map(subject => (
-                  <SelectItem key={subject} value={subject}>{subject === 'all' ? 'All Subjects' : subject}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label htmlFor="semester" className="text-sm font-medium">Semester</label>
-            <Select value={semesterFilter} onValueChange={setSemesterFilter}>
-              <SelectTrigger id="semester">
-                <SelectValue placeholder="All Semesters" />
-              </SelectTrigger>
-              <SelectContent>
-                 {uniqueSemesters.map(sem => (
-                    <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="lg:col-start-4">
-             <label htmlFor="sort" className="text-sm font-medium">Sort by</label>
-            <div className="flex gap-2">
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger id="sort">
-                  <SelectValue placeholder="Upload Date" />
+      <div className="bg-card p-4 sm:p-6 rounded-lg shadow-sm mb-8">
+        {/* Desktop Filters */}
+        <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div>
+                <label htmlFor="subject-desktop" className="text-sm font-medium">Subject</label>
+                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                <SelectTrigger id="subject-desktop">
+                    <SelectValue placeholder="All Subjects" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="date">Upload Date</SelectItem>
-                  <SelectItem value="downloads">Downloads</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
+                    {uniqueSubjects.map(subject => (
+                    <SelectItem key={subject} value={subject}>{subject === 'all' ? 'All Subjects' : subject}</SelectItem>
+                    ))}
                 </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <ListFilter className="h-4 w-4" />
-              </Button>
+                </Select>
             </div>
-          </div>
+            <div>
+                <label htmlFor="semester-desktop" className="text-sm font-medium">Semester</label>
+                <Select value={semesterFilter} onValueChange={setSemesterFilter}>
+                <SelectTrigger id="semester-desktop">
+                    <SelectValue placeholder="All Semesters" />
+                </SelectTrigger>
+                <SelectContent>
+                    {uniqueSemesters.map(sem => (
+                        <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+            </div>
+            <div className="lg:col-start-4">
+                <label htmlFor="sort-desktop" className="text-sm font-medium">Sort by</label>
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger id="sort-desktop">
+                    <SelectValue placeholder="Upload Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="date">Upload Date</SelectItem>
+                    <SelectItem value="downloads">Downloads</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+
+        {/* Mobile Filters */}
+        <div className="lg:hidden">
+            <Accordion type="single" collapsible>
+                <AccordionItem value="filters">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <SlidersHorizontal className="h-4 w-4" />
+                            <span>Filter & Sort</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div>
+                                <label htmlFor="subject-mobile" className="text-sm font-medium">Subject</label>
+                                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                                <SelectTrigger id="subject-mobile">
+                                    <SelectValue placeholder="All Subjects" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {uniqueSubjects.map(subject => (
+                                    <SelectItem key={subject} value={subject}>{subject === 'all' ? 'All Subjects' : subject}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <label htmlFor="semester-mobile" className="text-sm font-medium">Semester</label>
+                                <Select value={semesterFilter} onValueChange={setSemesterFilter}>
+                                <SelectTrigger id="semester-mobile">
+                                    <SelectValue placeholder="All Semesters" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {uniqueSemesters.map(sem => (
+                                        <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <label htmlFor="sort-mobile" className="text-sm font-medium">Sort by</label>
+                                <Select value={sortOrder} onValueChange={setSortOrder}>
+                                    <SelectTrigger id="sort-mobile">
+                                    <SelectValue placeholder="Upload Date" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                    <SelectItem value="date">Upload Date</SelectItem>
+                                    <SelectItem value="downloads">Downloads</SelectItem>
+                                    <SelectItem value="name">Name</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                       </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
       </div>
       

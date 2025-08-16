@@ -1,4 +1,3 @@
-
 import {
   Select,
   SelectContent,
@@ -10,25 +9,33 @@ import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
 import { ListFilter } from 'lucide-react';
 
-export default function LabProgramsPage() {
+export default function QuestionPapersPage() {
   const resources = [
     {
-      title: 'Data Structures and Algorithms Lab Programs',
-      description: 'Complete implementation of all DSA lab programs including sorting algorithms, trees, graphs, and more.',
-      tags: ['Lab Programs', 'Data Structures', 'Sem 1'],
-      keywords: ['algorithms', 'sorting', 'trees', '+1 more'],
-      date: 'Jan 15, 2024',
-      size: '2.5 MB',
-      downloads: 245,
+      title: 'DSA Mid-Term Question Paper 2023',
+      description: 'Mid-term question paper for Data Structures and Algorithms from the previous year.',
+      tags: ['Question Paper', 'DSA', 'Sem 1'],
+      keywords: ['mid-term', '2023', 'exam'],
+      date: 'Mar 05, 2024',
+      size: '1.2 MB',
+      downloads: 180,
     },
-    // Add more resource objects here
+    {
+      title: 'DBMS Final Exam Paper 2022',
+      description: 'Final examination paper for Database Management Systems, with solutions.',
+      tags: ['Question Paper', 'DBMS', 'Sem 1'],
+      keywords: ['final-exam', '2022', 'solutions'],
+      date: 'Feb 28, 2024',
+      size: '1.8 MB',
+      downloads: 210,
+    },
   ];
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Lab Programs</h1>
-        <p className="text-muted-foreground mt-1">Browse all lab programs</p>
+        <h1 className="text-3xl font-bold tracking-tight">Question Papers</h1>
+        <p className="text-muted-foreground mt-1">Browse all previous year question papers</p>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
@@ -47,15 +54,15 @@ export default function LabProgramsPage() {
             </Select>
           </div>
           <div>
-            <label htmlFor="semester" className="text-sm font-medium">Semester</label>
+            <label htmlFor="year" className="text-sm font-medium">Year</label>
             <Select>
-              <SelectTrigger id="semester">
-                <SelectValue placeholder="All Semesters" />
+              <SelectTrigger id="year">
+                <SelectValue placeholder="All Years" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Semesters</SelectItem>
-                <SelectItem value="sem1">Sem 1</SelectItem>
-                <SelectItem value="sem2">Sem 2</SelectItem>
+                <SelectItem value="all">All Years</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
               </SelectContent>
             </Select>
           </div>

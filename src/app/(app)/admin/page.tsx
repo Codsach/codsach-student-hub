@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { Octokit } from 'octokit';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/ai/flows/upload-flow';
+import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 
 
 export default function AdminPage() {
@@ -37,6 +38,10 @@ export default function AdminPage() {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState(false);
+  const [activeTab, setActiveTab] = useState("upload");
 
 
   useEffect(() => {
@@ -51,6 +56,40 @@ export default function AdminPage() {
         setIsConnected(true);
     }
   }, [router]);
+  
+  const fetchAllResources = async () => {
+    if (!githubToken) return;
+    setIsLoadingResources(true);
+    try {
+        const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
+        const resourcePromises = categories.map(category => 
+            listResources({
+                githubToken,
+                repository: 'Codsach/codsach-resources',
+                category,
+            })
+        );
+        const results = await Promise.all(resourcePromises);
+        const allFetchedResources = results.flat();
+        setAllResources(allFetchedResources);
+    } catch (error) {
+        console.error("Failed to fetch resources:", error);
+        toast({
+            title: 'Error',
+            description: 'Could not fetch resources from GitHub.',
+            variant: 'destructive',
+        });
+    } finally {
+        setIsLoadingResources(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isConnected && activeTab === 'manage') {
+        fetchAllResources();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, activeTab]);
 
   const handleConnectGitHub = async () => {
     if (!githubToken) {
@@ -167,45 +206,24 @@ export default function AdminPage() {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
   
-  const resources = [
-    {
-      title: 'Data Structures and Algorithms...',
-      description: 'Complete implementation of all DSA lab programs including sortin... dsa-lab-programs.zip • 2.5 MB',
-      category: 'Lab Programs',
-      uploadDate: 'Jan 15, 2024',
-      downloads: 245,
-    },
-    {
-      title: 'Database Management Systems...',
-      description: 'Comprehensive notes covering DBMS concepts, SQL, normalizatio... dbms-notes.pdf • 5.2 MB',
-      category: 'Notes',
-      uploadDate: 'Jan 10, 2024',
-      downloads: 189,
-    },
-    {
-      title: 'MCA Entrance Previous Year...',
-      description: 'Collection of previous year question papers for MCA entrance... mca-entrance-papers.pdf • 8.1 MB',
-      category: 'Question Papers',
-      uploadDate: 'Jan 8, 2024',
-      downloads: 456,
-    },
-    {
-      title: 'Visual Studio Code Setup Guide',
-      description: 'Complete setup guide for VS Code with essential extensions for MCA... vscode-setup.pdf • 1.8 MB',
-      category: 'Software Tools',
-      uploadDate: 'Jan 5, 2024',
-      downloads: 123,
-    },
-  ];
-
   const categoryColors: { [key: string]: string } = {
-    'Lab Programs': 'bg-blue-100 text-blue-800',
-    'Notes': 'bg-green-100 text-green-800',
-    'Question Papers': 'bg-purple-100 text-purple-800',
-    'Software Tools': 'bg-orange-100 text-orange-800',
+    'notes': 'bg-green-100 text-green-800',
+    'lab-programs': 'bg-blue-100 text-blue-800',
+    'question-papers': 'bg-purple-100 text-purple-800',
+    'software-tools': 'bg-orange-100 text-orange-800',
   };
+  
+  const getCategoryName = (tag: string) => {
+    switch (tag) {
+        case 'notes': return 'Notes';
+        case 'lab-programs': return 'Lab Programs';
+        case 'question-papers': return 'Question Papers';
+        case 'software-tools': return 'Software Tools';
+        default: return 'General';
+    }
+  }
 
-  const totalDownloads = resources.reduce((sum, resource) => sum + resource.downloads, 0);
+  const totalDownloads = allResources.reduce((sum, resource) => sum + resource.downloads, 0);
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -216,7 +234,7 @@ export default function AdminPage() {
         </div>
       </div>
       
-      <Tabs defaultValue="upload">
+      <Tabs defaultValue="upload" onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="upload">Upload Resource</TabsTrigger>
           <TabsTrigger value="manage">Manage Resources</TabsTrigger>
@@ -283,8 +301,8 @@ export default function AdminPage() {
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lab-programs">Lab Programs</SelectItem>
                         <SelectItem value="notes">Notes</SelectItem>
+                        <SelectItem value="lab-programs">Lab Programs</SelectItem>
                         <SelectItem value="question-papers">Question Papers</SelectItem>
                         <SelectItem value="software-tools">Software Tools</SelectItem>
                       </SelectContent>
@@ -395,42 +413,57 @@ export default function AdminPage() {
                                 <TableHead className="w-[40%]">Resource</TableHead>
                                 <TableHead>Category</TableHead>
                                 <TableHead>Upload Date</TableHead>
-                                <TableHead>Downloads</TableHead>
+                                <TableHead>Size</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {resources.map((resource, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <div className="font-medium">{resource.title}</div>
-                                        <div className="text-sm text-muted-foreground">{resource.description}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className={`${categoryColors[resource.category]} border-none`}>{resource.category}</Badge>
-                                    </TableCell>
-                                    <TableCell>{resource.uploadDate}</TableCell>
-                                    <TableCell>{resource.downloads}</TableCell>
-                                    <TableCell className="flex items-center gap-2">
-                                        <Button variant="ghost" size="icon">
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon">
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                            {isLoadingResources ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-12">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : allResources.length > 0 ? (
+                                allResources.map((resource, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <div className="font-medium">{resource.title}</div>
+                                            <div className="text-sm text-muted-foreground line-clamp-2">{resource.description}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className={`${categoryColors[resource.tags[0]] || ''} border-none`}>{getCategoryName(resource.tags[0])}</Badge>
+                                        </TableCell>
+                                        <TableCell>{resource.date}</TableCell>
+                                        <TableCell>{resource.size}</TableCell>
+                                        <TableCell className="flex items-center gap-2">
+                                            <Button variant="ghost" size="icon">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                     <TableCell colSpan={5} className="text-center py-12">
+                                        <p className="font-semibold">No resources found.</p>
+                                        <p className="text-muted-foreground">Upload a resource to see it here.</p>
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </div>
                 <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
                     <div>
-                        Total Resources: {resources.length} <br />
-                        Showing {resources.length} resources
+                        Total Resources: {allResources.length} <br />
+                        Showing {allResources.length} resources
                     </div>
                     <div>Total Downloads: {totalDownloads.toLocaleString()}</div>
                 </div>

@@ -55,24 +55,26 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
-          <Logo />
-           <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
-            Codsach
-          </h1>
-        </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              {link.label}
+        <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
+              <Logo />
+               <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
+                Codsach
+              </h1>
             </Link>
-          ))}
-        </nav>
-        <div className="hidden items-center gap-4 md:flex">
+            <nav className="hidden items-center gap-6 md:flex">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+        </div>
+        <div className="hidden items-center gap-2 md:flex">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search resources..." className="pl-10 w-48 bg-muted border-none rounded-full" />
@@ -101,7 +103,7 @@ export function Header() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b">
                    <Link href="/" className="flex items-center gap-2 font-bold text-xl group">

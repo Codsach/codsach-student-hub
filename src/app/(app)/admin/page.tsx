@@ -113,6 +113,13 @@ export default function AdminPage() {
                 filePath: `${category}/${file.name}`,
                 fileContent: base64Content,
                 commitMessage: `feat: Add ${title}`,
+                metadata: {
+                  title,
+                  description,
+                  subject,
+                  semester,
+                  tags,
+                }
             });
 
             if (result.success) {

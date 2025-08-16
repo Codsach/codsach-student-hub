@@ -16,17 +16,21 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function NotesPage() {
-  const [resources, setResources] = useState<ListResourcesOutput>([]);
+  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  
+  const [subjectFilter, setSubjectFilter] = useState('all');
+  const [semesterFilter, setSemesterFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('date');
+
 
   useEffect(() => {
     const fetchResources = async () => {
       setIsLoading(true);
       const githubToken = localStorage.getItem('githubToken');
       if (!githubToken) {
-        // Not showing a toast here as it could be annoying for non-admin users.
-        // A better approach would be to have a public API endpoint.
         setIsLoading(false);
         return;
       }
@@ -36,7 +40,8 @@ export default function NotesPage() {
           repository: 'Codsach/codsach-resources',
           category: 'notes',
         });
-        setResources(fetchedResources);
+        setAllResources(fetchedResources);
+        setFilteredResources(fetchedResources);
       } catch (error) {
         console.error("Failed to fetch notes:", error);
         toast({
@@ -51,6 +56,32 @@ export default function NotesPage() {
 
     fetchResources();
   }, [toast]);
+  
+   useEffect(() => {
+    let resources = [...allResources];
+
+    // Filtering
+    if (subjectFilter !== 'all') {
+      resources = resources.filter(r => r.subject === subjectFilter);
+    }
+    if (semesterFilter !== 'all') {
+        resources = resources.filter(r => r.semester === semesterFilter);
+    }
+    
+    // Sorting
+    if (sortOrder === 'date') {
+      resources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } else if (sortOrder === 'downloads') {
+      resources.sort((a, b) => b.downloads - a.downloads);
+    } else if (sortOrder === 'name') {
+      resources.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    setFilteredResources(resources);
+  }, [allResources, subjectFilter, semesterFilter, sortOrder]);
+
+  const uniqueSubjects = ['all', ...Array.from(new Set(allResources.map(r => r.subject).filter(Boolean))) as string[]];
+  const uniqueSemesters = ['all', ...Array.from(new Set(allResources.map(r => r.semester).filter(Boolean))) as string[]];
 
 
   return (
@@ -64,34 +95,34 @@ export default function NotesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label htmlFor="subject" className="text-sm font-medium">Subject</label>
-            <Select>
+            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger id="subject">
                 <SelectValue placeholder="All Subjects" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
-                <SelectItem value="java">Advanced Java</SelectItem>
-                <SelectItem value="dbms">DBMS</SelectItem>
+                 {uniqueSubjects.map(subject => (
+                  <SelectItem key={subject} value={subject}>{subject === 'all' ? 'All Subjects' : subject}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <label htmlFor="semester" className="text-sm font-medium">Semester</label>
-            <Select>
+            <Select value={semesterFilter} onValueChange={setSemesterFilter}>
               <SelectTrigger id="semester">
                 <SelectValue placeholder="All Semesters" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Semesters</SelectItem>
-                <SelectItem value="sem1">Sem 1</SelectItem>
-                <SelectItem value="sem2">Sem 2</SelectItem>
+                 {uniqueSemesters.map(sem => (
+                    <SelectItem key={sem} value={sem}>{sem === 'all' ? 'All Semesters' : `Sem ${sem}`}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="lg:col-start-4">
              <label htmlFor="sort" className="text-sm font-medium">Sort by</label>
             <div className="flex gap-2">
-              <Select>
+              <Select value={sortOrder} onValueChange={setSortOrder}>
                 <SelectTrigger id="sort">
                   <SelectValue placeholder="Upload Date" />
                 </SelectTrigger>
@@ -113,11 +144,11 @@ export default function NotesPage() {
         <div className='flex justify-center items-center py-12'>
           <Loader2 className='h-8 w-8 animate-spin text-primary' />
         </div>
-      ) : resources.length > 0 ? (
+      ) : filteredResources.length > 0 ? (
         <>
-          <p className="text-sm text-muted-foreground mb-6">Showing {resources.length} of {resources.length} resources</p>
+          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {allResources.length} resources</p>
           <div className="space-y-6">
-            {resources.map((resource, index) => (
+            {filteredResources.map((resource, index) => (
               <ResourceCard key={index} {...resource} />
             ))}
           </div>
@@ -125,7 +156,7 @@ export default function NotesPage() {
       ) : (
          <div className='text-center py-12'>
             <h3 className='text-xl font-semibold'>No Notes Found</h3>
-            <p className='text-muted-foreground mt-2'>Please connect to GitHub in the admin panel to see your uploaded notes.</p>
+            <p className='text-muted-foreground mt-2'>Please connect to GitHub in the admin panel and upload some notes.</p>
         </div>
       )}
     </div>

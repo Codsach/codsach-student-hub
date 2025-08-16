@@ -174,6 +174,7 @@ export default function AdminPage() {
                   subject,
                   semester,
                   tags: [category, ...tags],
+                  keywords: [],
                 }
             });
 
@@ -500,12 +501,29 @@ export default function AdminPage() {
                                             <Button variant="ghost" size="icon" disabled>
                                                 <Edit className="h-4 w-4" />
                                             </Button>
-                                            <AlertDialog>
+                                            <AlertDialog onOpenChange={(open) => !open && setResourceToDelete(null)}>
                                                 <AlertDialogTrigger asChild>
                                                     <Button variant="ghost" size="icon" onClick={() => setResourceToDelete(resource)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                      <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete the resource
+                                                        <span className='font-bold'> {resourceToDelete?.title} </span> 
+                                                        and its associated metadata file from your GitHub repository.
+                                                      </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                      <AlertDialogCancel onClick={() => setResourceToDelete(null)}>Cancel</AlertDialogCancel>
+                                                      <AlertDialogAction onClick={handleDeleteResource} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className='h-4 w-4 mr-2'/>}
+                                                        Yes, delete it
+                                                      </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
                                             </AlertDialog>
                                         </TableCell>
                                     </TableRow>
@@ -532,23 +550,8 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
       </Tabs>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the resource
-            <span className='font-bold'> {resourceToDelete?.title} </span> 
-            and its associated metadata file from your GitHub repository.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setResourceToDelete(null)}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteResource} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className='h-4 w-4 mr-2'/>}
-            Yes, delete it
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
     </div>
   );
 }
+
+    

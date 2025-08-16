@@ -8,25 +8,24 @@ async function LabProgramsPageData() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
+        // This will only work if the GITHUB_TOKEN is set in the environment
         const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) {
-            throw new Error("GitHub token is not configured on the server.");
+        if (githubToken) {
+            resources = await listResources({
+                githubToken,
+                repository: 'Codsach/codsach-resources',
+                category: 'lab-programs',
+            });
         }
-        resources = await listResources({
-            githubToken,
-            repository: 'Codsach/codsach-resources',
-            category: 'lab-programs',
-        });
     } catch (e: any) {
         console.error("Failed to fetch lab programs on server:", e);
-        error = "Could not fetch resources from GitHub. Please ensure your GitHub token is configured correctly.";
+        // Don't throw an error, let the client handle it
+        error = "Could not fetch resources from GitHub on the server.";
     }
 
-    if (error) {
-        return <div className="text-center py-12 text-red-500">{error}</div>;
-    }
-
-    return <LabProgramsClient initialResources={resources} />;
+    // Pass the server-fetched resources (or empty array) to the client component
+    // The client component will handle fetching if initialResources is empty.
+    return <LabProgramsClient initialResources={resources} serverError={error} />;
 }
 
 

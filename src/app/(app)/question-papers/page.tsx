@@ -9,24 +9,19 @@ async function QuestionPapersPageData() {
     let error: string | null = null;
     try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) {
-            throw new Error("GitHub token is not configured on the server.");
+        if (githubToken) {
+            resources = await listResources({
+                githubToken,
+                repository: 'Codsach/codsach-resources',
+                category: 'question-papers',
+            });
         }
-        resources = await listResources({
-            githubToken,
-            repository: 'Codsach/codsach-resources',
-            category: 'question-papers',
-        });
     } catch (e: any) {
         console.error("Failed to fetch question papers on server:", e);
-        error = "Could not fetch resources from GitHub. Please ensure your GitHub token is configured correctly.";
+        error = "Could not fetch resources from GitHub on the server.";
     }
 
-    if (error) {
-        return <div className="text-center py-12 text-red-500">{error}</div>;
-    }
-
-    return <QuestionPapersClient initialResources={resources} />;
+    return <QuestionPapersClient initialResources={resources} serverError={error} />;
 }
 
 

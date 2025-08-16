@@ -10,15 +10,20 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
-import { ListFilter } from 'lucide-react';
-import { type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { ListFilter, Loader2 } from 'lucide-react';
+import { listResources, type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 
-export function QuestionPapersClient({ initialResources }: { initialResources: ListResourcesOutput }) {
+export function QuestionPapersClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
+  const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
+  const [isLoading, setIsLoading] = useState(initialResources.length === 0 && !serverError);
+
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
@@ -27,19 +32,55 @@ export function QuestionPapersClient({ initialResources }: { initialResources: L
 
   
    useEffect(() => {
-    let resources = [...initialResources];
+    async function fetchClientSide() {
+        if (initialResources.length === 0 && !serverError) {
+            setIsLoading(true);
+            const githubToken = localStorage.getItem('githubToken');
+            if (!githubToken) {
+                toast({
+                  title: 'GitHub Not Connected',
+                  description: 'Please connect your GitHub account in the admin panel to see resources.',
+                  variant: 'destructive',
+                });
+                setIsLoading(false);
+                return;
+            }
+            try {
+                const fetchedResources = await listResources({
+                    githubToken,
+                    repository: 'Codsach/codsach-resources',
+                    category: 'question-papers',
+                });
+                setResources(fetchedResources);
+            } catch (error) {
+                console.error("Failed to fetch resources on client:", error);
+                toast({
+                  title: 'Error',
+                  description: 'Could not fetch resources from GitHub.',
+                  variant: 'destructive',
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    }
+    fetchClientSide();
+  }, [initialResources.length, serverError, toast]);
+
+   useEffect(() => {
+    let resourcesToFilter = [...resources];
 
     // Filtering
     if (subjectFilter !== 'all') {
-      resources = resources.filter(r => r.subject === subjectFilter);
+      resourcesToFilter = resourcesToFilter.filter(r => r.subject === subjectFilter);
     }
     if (yearFilter !== 'all') {
-        resources = resources.filter(r => r.year === yearFilter);
+        resourcesToFilter = resourcesToFilter.filter(r => r.year === yearFilter);
     }
      // Search
     if (searchQuery) {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        resources = resources.filter(r => 
+        resourcesToFilter = resourcesToFilter.filter(r => 
             r.title.toLowerCase().includes(lowerCaseQuery) ||
             r.description.toLowerCase().includes(lowerCaseQuery) ||
             r.tags.some(t => t.toLowerCase().includes(lowerCaseQuery)) ||
@@ -49,18 +90,18 @@ export function QuestionPapersClient({ initialResources }: { initialResources: L
     
     // Sorting
     if (sortOrder === 'date') {
-      resources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      resourcesToFilter.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } else if (sortOrder === 'downloads') {
-      resources.sort((a, b) => b.downloads - a.downloads);
+      resourcesToFilter.sort((a, b) => b.downloads - a.downloads);
     } else if (sortOrder === 'name') {
-      resources.sort((a, b) => a.title.localeCompare(b.title));
+      resourcesToFilter.sort((a, b) => a.title.localeCompare(b.title));
     }
 
-    setFilteredResources(resources);
-  }, [initialResources, subjectFilter, yearFilter, sortOrder, searchQuery]);
+    setFilteredResources(resourcesToFilter);
+  }, [resources, subjectFilter, yearFilter, sortOrder, searchQuery]);
 
-  const uniqueSubjects = ['all', ...Array.from(new Set(initialResources.map(r => r.subject).filter(Boolean))) as string[]];
-  const uniqueYears = ['all', ...Array.from(new Set(initialResources.map(r => r.year).filter(Boolean))) as string[]];
+  const uniqueSubjects = ['all', ...Array.from(new Set(resources.map(r => r.subject).filter(Boolean))) as string[]];
+  const uniqueYears = ['all', ...Array.from(new Set(resources.map(r => r.year).filter(Boolean))) as string[]];
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -118,9 +159,13 @@ export function QuestionPapersClient({ initialResources }: { initialResources: L
         </div>
       </div>
       
-       {filteredResources.length > 0 ? (
+       {isLoading ? (
+         <div className='flex justify-center items-center py-12'>
+            <Loader2 className='h-8 w-8 animate-spin text-primary' />
+        </div>
+       ) : filteredResources.length > 0 ? (
         <>
-          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {initialResources.length} resources</p>
+          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {resources.length} resources</p>
           <div className="space-y-6">
             {filteredResources.map((resource, index) => (
               <ResourceCard key={index} {...resource} />
@@ -130,7 +175,7 @@ export function QuestionPapersClient({ initialResources }: { initialResources: L
       ) : (
          <div className='text-center py-12'>
             <h3 className='text-xl font-semibold'>No Question Papers Found</h3>
-            <p className='text-muted-foreground mt-2'>Please try adjusting your search or filters.</p>
+            <p className='text-muted-foreground mt-2'>Please connect to GitHub or try adjusting your search or filters.</p>
         </div>
       )}
     </div>

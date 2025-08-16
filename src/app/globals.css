@@ -70,6 +70,13 @@
   }
 }
 
+.hero-section {
+    @apply bg-gradient-to-b from-[#7950F2] to-[#50B4F2];
+}
+.dark .hero-section {
+    @apply bg-gradient-to-b from-[#1E293B] to-[#2C3E50];
+}
+
 @keyframes move {
   0% {
     transform: translate(0, 0) rotate(0deg) scale(1);
@@ -94,6 +101,10 @@
   background: linear-gradient(135deg, hsl(var(--primary)) 0%, #50B4F2 100%);
   overflow: hidden;
 }
+.dark .background-animation {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #3a7bd5 100%);
+}
+
 
 .background-animation div {
   position: absolute;
@@ -110,6 +121,11 @@
   animation: move 25s infinite alternate;
 }
 
+.dark .circle-1 {
+  background: radial-gradient(circle, #2C3E50, #4A00E0);
+}
+
+
 .circle-2 {
   width: 50vmax;
   height: 50vmax;
@@ -119,6 +135,10 @@
   animation: move 30s infinite alternate-reverse;
 }
 
+.dark .circle-2 {
+  background: radial-gradient(circle, #4A00E0, #2C3E50);
+}
+
 .circle-3 {
   width: 30vmax;
   height: 30vmax;
@@ -126,6 +146,9 @@
   bottom: 40%;
   left: 30%;
   animation: move 20s infinite alternate;
+}
+.dark .circle-3 {
+  background: radial-gradient(circle, #8E2DE2, #4A00E0);
 }
 
 @keyframes slide-in-top {

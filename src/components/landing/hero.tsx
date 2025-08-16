@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function Hero() {
   return (
-    <section className="relative bg-gradient-to-b from-[#7950F2] to-[#50B4F2] py-24 sm:py-32 lg:py-40 text-white overflow-hidden">
+    <section className="relative hero-section py-24 sm:py-32 lg:py-40 text-white overflow-hidden">
        <div className="absolute inset-0 z-0">
           <div className="background-animation">
             <div className="circle-1" style={{ animationDuration: '30s' }}></div>

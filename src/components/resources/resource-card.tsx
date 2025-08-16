@@ -149,20 +149,16 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
     </Card>
 
     <Dialog open={!!viewFileUrl} onOpenChange={(open) => { if (!open) setViewFileUrl(null); }}>
-        <DialogContent className="max-w-4xl h-[90vh]">
-            <DialogHeader>
-            <DialogTitle>{viewFileName}</DialogTitle>
-             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-            </DialogClose>
+        <DialogContent className="max-w-4xl h-[90vh] p-0">
+            <DialogHeader className="p-6 pb-2">
+              <DialogTitle>{viewFileName}</DialogTitle>
             </DialogHeader>
             <div className="h-full w-full">
-            <iframe
-                src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
-                className="h-full w-full"
-                frameBorder="0"
-            ></iframe>
+              <iframe
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
+                  className="h-full w-full"
+                  frameBorder="0"
+              ></iframe>
             </div>
         </DialogContent>
     </Dialog>

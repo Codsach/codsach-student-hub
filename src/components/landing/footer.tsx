@@ -1,6 +1,29 @@
 import Link from 'next/link';
 import { Twitter, Github, Linkedin } from 'lucide-react';
 
+const Logo = () => (
+  <svg
+    className="h-8 w-8 text-primary"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+    <text
+      x="50%"
+      y="50%"
+      textAnchor="middle"
+      dy=".3em"
+      fontSize="9"
+      fill="currentColor"
+      fontFamily="sans-serif"
+      fontWeight="bold"
+    >
+      CS
+    </text>
+  </svg>
+);
+
 export function Footer() {
   const socialLinks = [
     { icon: <Twitter className="h-5 w-5" />, href: '#' },
@@ -28,7 +51,8 @@ export function Footer() {
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-4">
-            <Link href="/" className="font-bold text-2xl text-primary">
+            <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary">
+              <Logo />
               <span className="font-headline">Codsach</span>
             </Link>
             <p className="text-sm">

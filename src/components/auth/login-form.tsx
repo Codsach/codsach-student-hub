@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 
 export function LoginForm() {
     return (
@@ -39,6 +39,12 @@ export function LoginForm() {
                 <div className="mt-6 text-center text-sm">
                     <Link href="#" className="text-white/70 hover:text-white hover:underline">
                         Forgot password?
+                    </Link>
+                </div>
+                <div className="mt-4 text-center">
+                    <Link href="/" className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Home</span>
                     </Link>
                 </div>
             </CardContent>

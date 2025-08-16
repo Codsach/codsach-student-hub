@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,18 @@ import { Octokit } from 'octokit';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/ai/flows/upload-flow';
 import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { deleteResource } from '@/ai/flows/delete-resource-flow';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 export default function AdminPage() {
@@ -42,6 +54,8 @@ export default function AdminPage() {
   const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
   const [isLoadingResources, setIsLoadingResources] = useState(false);
   const [activeTab, setActiveTab] = useState("upload");
+  const [resourceToDelete, setResourceToDelete] = useState<ListResourcesOutput[0] | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   useEffect(() => {
@@ -145,11 +159,13 @@ export default function AdminPage() {
         reader.readAsDataURL(file);
         reader.onload = async () => {
             const base64Content = (reader.result as string).split(',')[1];
+            const fileName = file.name.replace(/ /g, '-');
+            const filePath = `${category}/${fileName}`;
 
             const result = await uploadFile({
                 githubToken: githubToken,
                 repository: 'Codsach/codsach-resources',
-                filePath: `${category}/${file.name}`,
+                filePath: filePath,
                 fileContent: base64Content,
                 commitMessage: `feat: Add ${title}`,
                 metadata: {
@@ -157,7 +173,7 @@ export default function AdminPage() {
                   description,
                   subject,
                   semester,
-                  tags,
+                  tags: [category, ...tags],
                 }
             });
 
@@ -174,6 +190,10 @@ export default function AdminPage() {
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
+                // Refresh resources if on manage tab
+                if(activeTab === 'manage') {
+                    fetchAllResources();
+                }
             } else {
                 toast({ title: "Upload Failed", description: result.error, variant: "destructive" });
             }
@@ -187,6 +207,42 @@ export default function AdminPage() {
     } catch (error: any) {
         toast({ title: "Upload Failed", description: error.message || "An unexpected error occurred.", variant: "destructive" });
         setIsUploading(false);
+    }
+  };
+  
+   const handleDeleteResource = async () => {
+    if (!resourceToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      const result = await deleteResource({
+        githubToken,
+        repository: 'Codsach/codsach-resources',
+        filePath: `${resourceToDelete.tags[0]}/${resourceToDelete.fileName}`,
+      });
+
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: `Successfully deleted "${resourceToDelete.title}".`,
+        });
+        setAllResources(allResources.filter(r => r.fileName !== resourceToDelete.fileName));
+      } else {
+        toast({
+          title: 'Deletion Failed',
+          description: result.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Deletion Failed',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+      setResourceToDelete(null);
     }
   };
 
@@ -259,6 +315,7 @@ export default function AdminPage() {
                     <Input 
                         id="gh-token" 
                         placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
+                        type="password"
                         value={githubToken}
                         onChange={(e) => setGithubToken(e.target.value)}
                         disabled={isConnecting || isConnected}
@@ -437,15 +494,19 @@ export default function AdminPage() {
                                         <TableCell>{resource.date}</TableCell>
                                         <TableCell>{resource.size}</TableCell>
                                         <TableCell className="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon">
-                                                <Eye className="h-4 w-4" />
+                                            <Button variant="ghost" size="icon" asChild>
+                                                <Link href={resource.downloadUrl} target="_blank"><Eye className="h-4 w-4" /></Link>
                                             </Button>
-                                            <Button variant="ghost" size="icon">
+                                            <Button variant="ghost" size="icon" disabled>
                                                 <Edit className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon">
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={() => setResourceToDelete(resource)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                            </AlertDialog>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -471,6 +532,23 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the resource
+            <span className='font-bold'> {resourceToDelete?.title} </span> 
+            and its associated metadata file from your GitHub repository.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setResourceToDelete(null)}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDeleteResource} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+            {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className='h-4 w-4 mr-2'/>}
+            Yes, delete it
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </div>
   );
 }

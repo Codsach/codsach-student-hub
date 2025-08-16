@@ -26,6 +26,7 @@ const ResourceSchema = z.object({
     tags: z.array(z.string()),
     subject: z.string().optional(),
     semester: z.string().optional(),
+    year: z.string().optional(),
     keywords: z.array(z.string()),
     date: z.string(),
     size: z.string(),
@@ -70,13 +71,14 @@ const listResourcesFlow = ai.defineFlow(
 
       const resources = await Promise.all(resourceFiles.map(async (file: any) => {
         const metadataPath = file.path.replace(/\.[^/.]+$/, "") + '.json';
-        let metadata = {
+        let metadata: any = {
             title: file.name.replace(/[-_]/g, ' ').replace(/\.[^/.]+$/, ""),
             description: 'No description available.',
             tags: [input.category],
             keywords: [file.name.split('.')[0]],
             subject: undefined,
             semester: undefined,
+            year: undefined,
         };
 
         try {
@@ -108,6 +110,7 @@ const listResourcesFlow = ai.defineFlow(
           tags: metadata.tags,
           subject: metadata.subject,
           semester: metadata.semester,
+          year: metadata.year,
           keywords: metadata.keywords || [],
           date: lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString(),
           size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,

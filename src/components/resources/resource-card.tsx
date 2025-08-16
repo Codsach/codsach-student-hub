@@ -14,9 +14,23 @@ interface ResourceCardProps {
   size: string;
   downloads: number;
   downloadUrl?: string;
+  subject?: string;
+  semester?: string;
+  year?: string;
 }
 
-export function ResourceCard({ title, description, tags, keywords, date, size, downloads, downloadUrl }: ResourceCardProps) {
+export function ResourceCard({ title, description, tags, keywords, date, size, downloads, downloadUrl, subject, semester, year }: ResourceCardProps) {
+  
+  const getCategoryName = (tag: string) => {
+    switch (tag) {
+        case 'notes': return 'Notes';
+        case 'lab-programs': return 'Lab Programs';
+        case 'question-papers': return 'Question Papers';
+        case 'software-tools': return 'Software Tools';
+        default: return tag.toUpperCase();
+    }
+  }
+
   return (
     <Card className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardContent className="p-6">
@@ -24,8 +38,11 @@ export function ResourceCard({ title, description, tags, keywords, date, size, d
         <p className="text-muted-foreground mb-4">{description}</p>
         <div className="flex flex-wrap gap-2 mb-4">
           {tags.map((tag, index) => (
-            <Badge key={index} variant="secondary" className="bg-primary/10 text-primary border-primary/20">{tag.toUpperCase()}</Badge>
+            <Badge key={index} variant="secondary" className="bg-primary/10 text-primary border-primary/20">{getCategoryName(tag)}</Badge>
           ))}
+          {subject && <Badge variant="outline">{subject}</Badge>}
+          {semester && <Badge variant="outline">Sem {semester}</Badge>}
+          {year && <Badge variant="outline">{year}</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-6">
           <Circle className="h-3 w-3 fill-current" />

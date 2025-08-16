@@ -1,35 +1,51 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+
+'use client';
+
 import { ResourceCard } from '@/components/resources/resource-card';
-import { ListFilter } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SoftwareToolsPage() {
-  const resources = [
-    {
-      title: 'Visual Studio Code',
-      description: 'A powerful and popular code editor with support for various languages and extensions.',
-      tags: ['Software Tool', 'Editor', 'Development'],
-      keywords: ['vscode', 'ide', 'free'],
-      date: 'Jan 30, 2024',
-      size: '80 MB',
-      downloads: 500,
-    },
-    {
-      title: 'XAMPP Server',
-      description: 'A free and open-source cross-platform web server solution stack package.',
-      tags: ['Software Tool', 'Server', 'Web Dev'],
-      keywords: ['apache', 'mysql', 'php'],
-      date: 'Jan 25, 2024',
-      size: '160 MB',
-      downloads: 350,
-    },
-  ];
+  const [resources, setResources] = useState<ListResourcesOutput>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      setIsLoading(true);
+      const githubToken = localStorage.getItem('githubToken');
+      if (!githubToken) {
+        toast({
+            title: 'GitHub Not Connected',
+            description: 'Please connect your GitHub account in the admin panel to see resources.',
+            variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const fetchedResources = await listResources({
+          githubToken,
+          repository: 'Codsach/codsach-resources',
+          category: 'software-tools',
+        });
+        setResources(fetchedResources);
+      } catch (error) {
+        console.error("Failed to fetch software tools:", error);
+        toast({
+          title: 'Error',
+          description: 'Could not fetch resources from GitHub.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchResources();
+  }, [toast]);
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -38,50 +54,25 @@ export default function SoftwareToolsPage() {
         <p className="text-muted-foreground mt-1">Browse all essential software tools</p>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          <div>
-            <label htmlFor="category" className="text-sm font-medium">Category</label>
-            <Select>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="editor">Editors</SelectItem>
-                <SelectItem value="server">Servers</SelectItem>
-                <SelectItem value="database">Database</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="lg:col-start-4">
-             <label htmlFor="sort" className="text-sm font-medium">Sort by</label>
-            <div className="flex gap-2">
-              <Select>
-                <SelectTrigger id="sort">
-                  <SelectValue placeholder="Upload Date" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Upload Date</SelectItem>
-                  <SelectItem value="downloads">Downloads</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <ListFilter className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+       {isLoading ? (
+        <div className='flex justify-center items-center py-12'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
         </div>
-      </div>
-      
-      <p className="text-sm text-muted-foreground mb-6">Showing {resources.length} of {resources.length} resources</p>
-
-      <div className="space-y-6">
-        {resources.map((resource, index) => (
-          <ResourceCard key={index} {...resource} />
-        ))}
-      </div>
+      ) : resources.length > 0 ? (
+        <>
+          <p className="text-sm text-muted-foreground mb-6">Showing {resources.length} of {resources.length} resources</p>
+          <div className="space-y-6">
+            {resources.map((resource, index) => (
+              <ResourceCard key={index} {...resource} />
+            ))}
+          </div>
+        </>
+      ) : (
+         <div className='text-center py-12'>
+            <h3 className='text-xl font-semibold'>No Software Tools Found</h3>
+            <p className='text-muted-foreground mt-2'>Please connect to GitHub in the admin panel and upload some software tools.</p>
+        </div>
+      )}
     </div>
   );
 }

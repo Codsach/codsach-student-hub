@@ -29,6 +29,7 @@ const UploadFileInputSchema = z.object({
     description: z.string(),
     subject: z.string().optional(),
     semester: z.string().optional(),
+    year: z.string().optional(),
     tags: z.array(z.string()),
     keywords: z.array(z.string()).optional(),
   }).describe("Metadata associated with the file."),

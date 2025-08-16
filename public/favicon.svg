@@ -1,0 +1,39 @@
+<svg width="64" height="64" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .spinner_z9k8 {
+      animation: spinner_YpZS 5s linear infinite;
+    }
+    .spinner_S1WN {
+      animation: spinner_YpZS 4s linear infinite reverse;
+    }
+    @keyframes spinner_YpZS {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    .stop1 {
+        stop-color: hsl(259 88% 63%);
+    }
+    .stop2 {
+        stop-color: hsl(259 88% 63% / 0.5);
+    }
+    .stroke1 {
+        stroke: hsl(259 88% 63%);
+    }
+  </style>
+  <g class="spinner_z9k8">
+    <rect x="20" y="20" width="60" height="60" rx="12" stroke="url(#paint0_linear_logo_favicon)" stroke-width="10" fill="none"/>
+  </g>
+  <g class="spinner_S1WN">
+      <rect x="35" y="35" width="30" height="30" rx="6" class="stroke1" stroke-width="8" fill="none"/>
+  </g>
+  <defs>
+      <linearGradient id="paint0_linear_logo_favicon" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+          <stop class="stop1"/>
+          <stop offset="1" class="stop2"/>
+      </linearGradient>
+  </defs>
+</svg>

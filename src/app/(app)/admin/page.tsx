@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2 } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +69,11 @@ export default function AdminPage() {
 
   const totalDownloads = resources.reduce((sum, resource) => sum + resource.downloads, 0);
 
+  const handleLogout = () => {
+    // In a real app, you'd clear session/token here
+    window.location.href = '/login';
+  };
+
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -77,11 +82,16 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
             <p className="text-muted-foreground mt-1">Manage and upload resources for Codsach</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
-          </Link>
-        </Button>
+        <div className='flex items-center gap-4'>
+            <Button asChild variant="outline">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" /> Logout
+            </Button>
+        </div>
       </div>
       
       <Tabs defaultValue="manage">

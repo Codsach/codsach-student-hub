@@ -4,6 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
+const Logo = () => (
+  <svg
+    className="h-8 w-8 text-primary"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+    <text
+      x="50%"
+      y="50%"
+      textAnchor="middle"
+      dy=".3em"
+      fontSize="9"
+      fill="currentColor"
+      fontFamily="sans-serif"
+      fontWeight="bold"
+    >
+      CS
+    </text>
+  </svg>
+);
+
+
 export function Header() {
   const navLinks = [
     { href: '#', label: 'Home' },
@@ -17,6 +41,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+          <Logo />
           <span className="font-headline">Codsach</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
@@ -48,6 +73,7 @@ export function Header() {
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <div className="flex flex-col h-full">
                 <div className="flex items-center gap-2 font-bold text-xl p-4 border-b text-primary">
+                   <Logo />
                    <span className="font-headline">Codsach</span>
                 </div>
                 <nav className="flex flex-col gap-4 p-4">

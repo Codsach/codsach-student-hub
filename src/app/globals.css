@@ -36,24 +36,24 @@
   }
 
   .dark {
-    --background: 0 0% 11.8%;
-    --foreground: 0 0% 91.8%;
-    --card: 0 0% 16.5%;
-    --card-foreground: 0 0% 91.8%;
-    --popover: 0 0% 11.8%;
-    --popover-foreground: 0 0% 91.8%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
     --primary: 217 91% 65%;
     --primary-foreground: 0 0% 91.8%;
-    --secondary: 0 0% 16.5%;
-    --secondary-foreground: 0 0% 91.8%;
-    --muted: 0 0% 16.5%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
     --muted-foreground: 0 0% 69%;
-    --accent: 0 0% 16.5%;
-    --accent-foreground: 0 0% 91.8%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 91.8%;
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
     --ring: 217 91% 65%;
   }
 }
@@ -112,6 +112,11 @@
   opacity: 0.2;
 }
 
+.dark .background-animation div {
+  opacity: 0.3;
+}
+
+
 .circle-1 {
   width: 40vmax;
   height: 40vmax;
@@ -123,6 +128,7 @@
 
 .dark .circle-1 {
   background: radial-gradient(circle, #2C3E50, #4A00E0);
+  box-shadow: 0 0 40px 10px #4A00E0, 0 0 60px 20px #2C3E50;
 }
 
 
@@ -137,6 +143,7 @@
 
 .dark .circle-2 {
   background: radial-gradient(circle, #4A00E0, #2C3E50);
+  box-shadow: 0 0 40px 10px #2C3E50, 0 0 60px 20px #4A00E0;
 }
 
 .circle-3 {
@@ -149,6 +156,7 @@
 }
 .dark .circle-3 {
   background: radial-gradient(circle, #8E2DE2, #4A00E0);
+  box-shadow: 0 0 30px 10px #8E2DE2, 0 0 50px 20px #4A00E0;
 }
 
 @keyframes slide-in-top {

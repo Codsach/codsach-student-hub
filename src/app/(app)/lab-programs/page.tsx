@@ -18,83 +18,42 @@ import { useSearchParams } from 'next/navigation';
 
 
 async function LabProgramsPageData() {
-  const { toast } = useToast();
-  // This is a server component, but we need a token.
-  // In a real app, you'd get this from a secure server-side store or environment variable.
-  // For this prototype, we are assuming it might not work server-side without a logged-in user context
-  // that can provide the token. The original implementation had it in localStorage,
-  // which is client-side only. This is a conceptual refactor.
-   let resources: ListResourcesOutput = [];
+    let resources: ListResourcesOutput = [];
+    let error: string | null = null;
     try {
-        // This flow would need a way to get the token on the server.
-        // For now, we will leave the client-side fetching as a fallback.
-        // In a real app, this would be `await listResources(...)`
-    } catch (error) {
-        console.error("Failed to fetch lab programs on server:", error);
-         toast({
-          title: 'Error',
-          description: 'Could not fetch resources from GitHub on the server.',
-          variant: 'destructive',
+        const githubToken = process.env.GITHUB_TOKEN;
+        if (!githubToken) {
+            throw new Error("GitHub token is not configured on the server.");
+        }
+        resources = await listResources({
+            githubToken,
+            repository: 'Codsach/codsach-resources',
+            category: 'lab-programs',
         });
+    } catch (e: any) {
+        console.error("Failed to fetch lab programs on server:", e);
+        error = "Could not fetch resources from GitHub. Please ensure your GitHub token is configured correctly.";
     }
 
-  return <LabProgramsPageContent initialResources={resources} />;
+    if (error) {
+        return <div className="text-center py-12 text-red-500">{error}</div>;
+    }
+
+    return <LabProgramsPageContent initialResources={resources} />;
 }
 
 
 function LabProgramsPageContent({ initialResources }: { initialResources: ListResourcesOutput }) {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>(initialResources);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
-  const [isLoading, setIsLoading] = useState(initialResources.length === 0);
-  const { toast } = useToast();
   const searchParams = useSearchParams();
   
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [semesterFilter, setSemesterFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('date');
   const searchQuery = searchParams.get('q') || '';
-
-  useEffect(() => {
-    const fetchResources = async () => {
-      // Only fetch on client if initial data is not present
-      if (initialResources.length > 0) return;
-
-      setIsLoading(true);
-      const githubToken = localStorage.getItem('githubToken');
-      if (!githubToken) {
-        toast({
-            title: 'GitHub Not Connected',
-            description: 'Please connect your GitHub account in the admin panel to see resources.',
-            variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const fetchedResources = await listResources({
-          githubToken,
-          repository: 'Codsach/codsach-resources',
-          category: 'lab-programs',
-        });
-        setAllResources(fetchedResources);
-        setFilteredResources(fetchedResources);
-      } catch (error) {
-        console.error("Failed to fetch lab programs:", error);
-        toast({
-          title: 'Error',
-          description: 'Could not fetch resources from GitHub.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchResources();
-  }, [toast, initialResources]);
   
    useEffect(() => {
-    let resources = [...allResources];
+    let resources = [...initialResources];
 
     // Filtering
     if (subjectFilter !== 'all') {
@@ -125,10 +84,10 @@ function LabProgramsPageContent({ initialResources }: { initialResources: ListRe
     }
 
     setFilteredResources(resources);
-  }, [allResources, subjectFilter, semesterFilter, sortOrder, searchQuery]);
+  }, [initialResources, subjectFilter, semesterFilter, sortOrder, searchQuery]);
 
-  const uniqueSubjects = ['all', ...Array.from(new Set(allResources.map(r => r.subject).filter(Boolean))) as string[]];
-  const uniqueSemesters = ['all', ...Array.from(new Set(allResources.map(r => r.semester).filter(Boolean))) as string[]];
+  const uniqueSubjects = ['all', ...Array.from(new Set(initialResources.map(r => r.subject).filter(Boolean))) as string[]];
+  const uniqueSemesters = ['all', ...Array.from(new Set(initialResources.map(r => r.semester).filter(Boolean))) as string[]];
 
 
   return (
@@ -187,13 +146,9 @@ function LabProgramsPageContent({ initialResources }: { initialResources: ListRe
         </div>
       </div>
       
-       {isLoading ? (
-        <div className='flex justify-center items-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        </div>
-      ) : filteredResources.length > 0 ? (
+       {filteredResources.length > 0 ? (
         <>
-          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {allResources.length} resources</p>
+          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {initialResources.length} resources</p>
           <div className="space-y-6">
             {filteredResources.map((resource, index) => (
               <ResourceCard key={index} {...resource} />
@@ -219,7 +174,7 @@ export default function LabProgramsPage() {
                 </div>
             </div>
         }>
-            <LabProgramsPageContent initialResources={[]} />
+            <LabProgramsPageData />
         </Suspense>
     )
 }

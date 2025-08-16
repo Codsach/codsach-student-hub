@@ -3,20 +3,20 @@ import Link from 'next/link';
 
 export function Hero() {
   return (
-    <section className="py-24 sm:py-32 lg:py-40">
+    <section className="relative bg-gradient-to-b from-[#7950F2] to-[#50B4F2] py-24 sm:py-32 lg:py-40 text-white">
       <div className="container mx-auto max-w-4xl text-center px-4 sm:px-6 lg:px-8">
         <h1 className="font-headline text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-          Welcome to <span className="text-primary">Codsach</span>
+          Welcome to <span className="text-white">Codsach</span>
         </h1>
-        <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-          Your one-stop destination for coding resources. Access lab programs, study notes, question papers, and more to ace your exams and projects.
+        <p className="mt-6 text-lg sm:text-xl max-w-2xl mx-auto">
+          Your comprehensive resource hub for MCA studies. Access lab programs, notes, question papers, and software tools all in one place.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8">
             <Link href="#resources">Explore Resources</Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href="#features">Learn More</Link>
+          <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-primary rounded-full px-8">
+            <Link href="#resources">Browse Notes</Link>
           </Button>
         </div>
       </div>

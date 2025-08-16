@@ -35,7 +35,7 @@ export function Resources() {
   ];
 
   return (
-    <section id="resources" className="py-16 sm:py-20 lg:py-24 bg-white">
+    <section id="resources" className="py-16 sm:py-20 lg:py-24 bg-background">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="font-headline text-3xl font-bold tracking-tight sm:text-4xl">
@@ -47,7 +47,7 @@ export function Resources() {
         </div>
         <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {resourceCategories.map((category) => (
-            <Card key={category.title} className="hover:shadow-lg transition-shadow duration-300 border rounded-lg">
+            <Card key={category.title} className="hover:shadow-lg transition-shadow duration-300 border rounded-lg bg-card">
               <CardHeader className="flex-col items-start gap-4 space-y-0 pb-2">
                 <div className={`p-3 rounded-md ${category.color}`}>
                   {category.icon}

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function Cta() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-white">
+    <section className="py-16 sm:py-20 lg:py-24 bg-background">
       <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="relative isolate overflow-hidden bg-gradient-to-r from-[#50B4F2] to-[#7950F2] shadow-2xl rounded-2xl px-6 py-20 text-center">
            <div className="absolute inset-0 z-0">

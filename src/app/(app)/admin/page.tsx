@@ -9,17 +9,24 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { Octokit } from 'octokit';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function AdminPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [githubToken, setGithubToken] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const { toast } = useToast();
 
 
   useEffect(() => {
@@ -28,7 +35,45 @@ export default function AdminPage() {
     if (!isLoggedIn) {
       router.push('/login');
     }
+    const storedToken = localStorage.getItem('githubToken');
+    if (storedToken) {
+        setGithubToken(storedToken);
+        setIsConnected(true);
+    }
   }, [router]);
+
+  const handleConnectGitHub = async () => {
+    if (!githubToken) {
+        toast({
+            title: 'Error',
+            description: 'Please enter a GitHub token.',
+            variant: 'destructive',
+        });
+        return;
+    }
+    setIsConnecting(true);
+    try {
+        const octokit = new Octokit({ auth: githubToken });
+        await octokit.rest.users.getAuthenticated();
+        localStorage.setItem('githubToken', githubToken);
+        setIsConnected(true);
+        toast({
+            title: 'Success',
+            description: 'Successfully connected to GitHub.',
+        });
+    } catch (error) {
+        toast({
+            title: 'Connection Failed',
+            description: 'The GitHub token is invalid or does not have the required permissions.',
+            variant: 'destructive',
+        });
+        setIsConnected(false);
+        localStorage.removeItem('githubToken');
+    } finally {
+        setIsConnecting(false);
+    }
+  };
+
 
   if (!isClient) {
     return null; // Or a loading spinner
@@ -116,7 +161,13 @@ export default function AdminPage() {
                 </div>
                 <div>
                     <Label htmlFor="gh-token">GitHub Personal Access Token</Label>
-                    <Input id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                    <Input 
+                        id="gh-token" 
+                        placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
+                        value={githubToken}
+                        onChange={(e) => setGithubToken(e.target.value)}
+                        disabled={isConnecting || isConnected}
+                    />
                 </div>
                 <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 space-y-2'>
                     <p className='font-semibold flex items-center gap-2'><Info className='h-4 w-4'/>How to get a GitHub Token:</p>
@@ -125,10 +176,18 @@ export default function AdminPage() {
                         <li>Click "Generate new token (classic)"</li>
                         <li>Select scopes: <span className='font-mono bg-yellow-100 px-1 rounded'>repo</span> (Full control of private repositories)</li>
                         <li>Copy the generated token and paste it above</li>
-                        <li><Link href="#" className='text-primary hover:underline'>Create Token</Link></li>
+                        <li><Link href="https://github.com/settings/tokens/new" target="_blank" className='text-primary hover:underline'>Create Token</Link></li>
                     </ol>
                 </div>
-                <Button>Connect GitHub</Button>
+                <Button onClick={handleConnectGitHub} disabled={isConnecting || isConnected}>
+                    {isConnecting ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting...</>
+                    ) : isConnected ? (
+                        <><CheckCircle className="mr-2 h-4 w-4" /> Connected</>
+                    ) : (
+                        'Connect GitHub'
+                    )}
+                </Button>
             </CardContent>
           </Card>
 
@@ -282,3 +341,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

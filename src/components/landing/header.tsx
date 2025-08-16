@@ -46,9 +46,9 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/lab-programs', label: 'Lab Programs' },
-    { href: '#', label: 'Notes' },
-    { href: '#', label: 'Question Papers' },
-    { href: '#', label: 'Software Tools' },
+    { href: '/notes', label: 'Notes' },
+    { href: '/question-papers', label: 'Question Papers' },
+    { href: '/software-tools', label: 'Software Tools' },
   ];
 
   return (

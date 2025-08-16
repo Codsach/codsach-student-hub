@@ -44,11 +44,11 @@ const Logo = () => (
 
 export function Header() {
   const navLinks = [
-    { href: '#', label: 'Home' },
-    { href: '#resources', label: 'Lab Programs' },
-    { href: '#features', label: 'Notes' },
-    { href: '#about', label: 'Question Papers' },
-    { href: '#about', label: 'Software Tools' },
+    { href: '/', label: 'Home' },
+    { href: '/lab-programs', label: 'Lab Programs' },
+    { href: '#', label: 'Notes' },
+    { href: '#', label: 'Question Papers' },
+    { href: '#', label: 'Software Tools' },
   ];
 
   return (

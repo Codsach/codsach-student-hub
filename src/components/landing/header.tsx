@@ -6,21 +6,35 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Logo = () => (
   <svg
-    className="h-8 w-8 text-primary"
-    viewBox="0 0 24 24"
-    fill="none"
+    className="h-8 w-8"
+    viewBox="0 0 100 100"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+    <defs>
+      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: 'hsl(var(--primary) / 0.5)', stopOpacity: 1 }} />
+      </linearGradient>
+    </defs>
+    <circle
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="url(#logoGradient)"
+      strokeWidth="10"
+      className="transition-all duration-300 group-hover:rotate-[360deg] origin-center"
+    />
     <text
       x="50%"
       y="50%"
       textAnchor="middle"
       dy=".3em"
-      fontSize="9"
-      fill="currentColor"
+      fontSize="40"
+      fill="hsl(var(--primary))"
       fontFamily="sans-serif"
       fontWeight="bold"
+      className="transition-all duration-300 group-hover:scale-110"
     >
       CS
     </text>
@@ -40,7 +54,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary group">
           <Logo />
           <span className="font-headline">Codsach</span>
         </Link>

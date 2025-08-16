@@ -16,10 +16,36 @@ import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
-function LabProgramsPageContent() {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
-  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+async function LabProgramsPageData() {
+  const { toast } = useToast();
+  // This is a server component, but we need a token.
+  // In a real app, you'd get this from a secure server-side store or environment variable.
+  // For this prototype, we are assuming it might not work server-side without a logged-in user context
+  // that can provide the token. The original implementation had it in localStorage,
+  // which is client-side only. This is a conceptual refactor.
+   let resources: ListResourcesOutput = [];
+    try {
+        // This flow would need a way to get the token on the server.
+        // For now, we will leave the client-side fetching as a fallback.
+        // In a real app, this would be `await listResources(...)`
+    } catch (error) {
+        console.error("Failed to fetch lab programs on server:", error);
+         toast({
+          title: 'Error',
+          description: 'Could not fetch resources from GitHub on the server.',
+          variant: 'destructive',
+        });
+    }
+
+  return <LabProgramsPageContent initialResources={resources} />;
+}
+
+
+function LabProgramsPageContent({ initialResources }: { initialResources: ListResourcesOutput }) {
+  const [allResources, setAllResources] = useState<ListResourcesOutput>(initialResources);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
+  const [isLoading, setIsLoading] = useState(initialResources.length === 0);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   
@@ -30,6 +56,9 @@ function LabProgramsPageContent() {
 
   useEffect(() => {
     const fetchResources = async () => {
+      // Only fetch on client if initial data is not present
+      if (initialResources.length > 0) return;
+
       setIsLoading(true);
       const githubToken = localStorage.getItem('githubToken');
       if (!githubToken) {
@@ -62,7 +91,7 @@ function LabProgramsPageContent() {
     };
 
     fetchResources();
-  }, [toast]);
+  }, [toast, initialResources]);
   
    useEffect(() => {
     let resources = [...allResources];
@@ -183,8 +212,14 @@ function LabProgramsPageContent() {
 
 export default function LabProgramsPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <LabProgramsPageContent />
+        <Suspense fallback={
+            <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <div className='flex justify-center items-center py-12'>
+                    <Loader2 className='h-8 w-8 animate-spin text-primary' />
+                </div>
+            </div>
+        }>
+            <LabProgramsPageContent initialResources={[]} />
         </Suspense>
     )
 }

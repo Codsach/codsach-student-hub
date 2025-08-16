@@ -16,10 +16,29 @@ import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
-function NotesPageContent() {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
-  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
-  const [isLoading, setIsLoading] = useState(true);
+async function NotesPageData() {
+  const { toast } = useToast();
+  let resources: ListResourcesOutput = [];
+    try {
+        // This would be server-side fetching, which is faster.
+        // It requires a secure way to access the GitHub token on the server.
+    } catch (error) {
+        console.error("Failed to fetch notes on server:", error);
+         toast({
+          title: 'Error',
+          description: 'Could not fetch resources from GitHub on the server.',
+          variant: 'destructive',
+        });
+    }
+
+  return <NotesPageContent initialResources={resources} />;
+}
+
+
+function NotesPageContent({ initialResources }: { initialResources: ListResourcesOutput }) {
+  const [allResources, setAllResources] = useState<ListResourcesOutput>(initialResources);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
+  const [isLoading, setIsLoading] = useState(initialResources.length === 0);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   
@@ -31,6 +50,7 @@ function NotesPageContent() {
 
   useEffect(() => {
     const fetchResources = async () => {
+      if (initialResources.length > 0) return;
       setIsLoading(true);
       const githubToken = localStorage.getItem('githubToken');
       if (!githubToken) {
@@ -63,7 +83,7 @@ function NotesPageContent() {
     };
 
     fetchResources();
-  }, [toast]);
+  }, [toast, initialResources]);
   
    useEffect(() => {
     let resources = [...allResources];
@@ -183,8 +203,14 @@ function NotesPageContent() {
 
 export default function NotesPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <NotesPageContent />
+        <Suspense fallback={
+            <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <div className='flex justify-center items-center py-12'>
+                    <Loader2 className='h-8 w-8 animate-spin text-primary' />
+                </div>
+            </div>
+        }>
+            <NotesPageContent initialResources={[]} />
         </Suspense>
     )
 }

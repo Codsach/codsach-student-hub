@@ -16,10 +16,29 @@ import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
-function QuestionPapersPageContent() {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
-  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
-  const [isLoading, setIsLoading] = useState(true);
+async function QuestionPapersPageData() {
+  const { toast } = useToast();
+  let resources: ListResourcesOutput = [];
+    try {
+        // Server-side fetching would go here.
+        // Requires a secure way to access the GitHub token on the server.
+    } catch (error) {
+        console.error("Failed to fetch question papers on server:", error);
+         toast({
+          title: 'Error',
+          description: 'Could not fetch resources from GitHub on the server.',
+          variant: 'destructive',
+        });
+    }
+
+  return <QuestionPapersPageContent initialResources={resources} />;
+}
+
+
+function QuestionPapersPageContent({ initialResources }: { initialResources: ListResourcesOutput }) {
+  const [allResources, setAllResources] = useState<ListResourcesOutput>(initialResources);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
+  const [isLoading, setIsLoading] = useState(initialResources.length === 0);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   
@@ -30,6 +49,7 @@ function QuestionPapersPageContent() {
 
   useEffect(() => {
     const fetchResources = async () => {
+      if (initialResources.length > 0) return;
       setIsLoading(true);
       const githubToken = localStorage.getItem('githubToken');
       if (!githubToken) {
@@ -62,7 +82,7 @@ function QuestionPapersPageContent() {
     };
 
     fetchResources();
-  }, [toast]);
+  }, [toast, initialResources]);
   
    useEffect(() => {
     let resources = [...allResources];
@@ -181,8 +201,14 @@ function QuestionPapersPageContent() {
 
 export default function QuestionPapersPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <QuestionPapersPageContent />
+        <Suspense fallback={
+            <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <div className='flex justify-center items-center py-12'>
+                    <Loader2 className='h-8 w-8 animate-spin text-primary' />
+                </div>
+            </div>
+        }>
+            <QuestionPapersPageContent initialResources={[]} />
         </Suspense>
     )
 }

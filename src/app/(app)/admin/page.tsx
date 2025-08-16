@@ -30,6 +30,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 
 
 export default function AdminPage() {
@@ -42,6 +52,7 @@ export default function AdminPage() {
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
 
+  // State for upload form
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -51,11 +62,23 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   
+  // State for resource management
   const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
   const [isLoadingResources, setIsLoadingResources] = useState(false);
   const [activeTab, setActiveTab] = useState("upload");
+  
+  // State for deletion
   const [resourceToDelete, setResourceToDelete] = useState<ListResourcesOutput[0] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // State for editing
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [resourceToEdit, setResourceToEdit] = useState<ListResourcesOutput[0] | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [editSemester, setEditSemester] = useState('');
 
 
   useEffect(() => {
@@ -244,6 +267,51 @@ export default function AdminPage() {
     } finally {
       setIsDeleting(false);
       setResourceToDelete(null);
+    }
+  };
+  
+   const handleOpenEditModal = (resource: ListResourcesOutput[0]) => {
+    setResourceToEdit(resource);
+    setEditTitle(resource.title);
+    setEditDescription(resource.description);
+    setEditSubject(resource.subject || '');
+    setEditSemester(resource.semester || '');
+    setIsEditModalOpen(true);
+  };
+  
+  const handleUpdateResource = async () => {
+    if (!resourceToEdit) return;
+    setIsUpdating(true);
+
+    try {
+        const result = await uploadFile({
+            githubToken: githubToken,
+            repository: 'Codsach/codsach-resources',
+            filePath: `${resourceToEdit.tags[0]}/${resourceToEdit.fileName}`,
+            // fileContent is optional in the flow now, so we can omit it for metadata-only updates
+            commitMessage: `feat: Update metadata for ${editTitle}`,
+            metadata: {
+              ...resourceToEdit,
+              title: editTitle,
+              description: editDescription,
+              subject: editSubject,
+              semester: editSemester,
+            }
+        });
+
+        if (result.success) {
+            toast({ title: "Success", description: "Resource updated successfully!" });
+            setIsEditModalOpen(false);
+            setResourceToEdit(null);
+            // Refresh resources to show updated data
+            await fetchAllResources();
+        } else {
+            toast({ title: "Update Failed", description: result.error, variant: "destructive" });
+        }
+    } catch (error: any) {
+        toast({ title: "Update Failed", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+    } finally {
+        setIsUpdating(false);
     }
   };
 
@@ -498,9 +566,50 @@ export default function AdminPage() {
                                             <Button variant="ghost" size="icon" asChild>
                                                 <Link href={resource.downloadUrl} target="_blank"><Eye className="h-4 w-4" /></Link>
                                             </Button>
-                                            <Button variant="ghost" size="icon" disabled>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
+                                            
+                                            <Dialog open={isEditModalOpen && resourceToEdit?.fileName === resource.fileName} onOpenChange={(open) => { if(!open) { setIsEditModalOpen(false); setResourceToEdit(null); } }}>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(resource)}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogHeader>
+                                                      <DialogTitle>Edit Resource: {resourceToEdit?.title}</DialogTitle>
+                                                      <DialogDescription>
+                                                        Make changes to the resource metadata. File content cannot be changed.
+                                                      </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 py-4">
+                                                        <div>
+                                                            <Label htmlFor="edit-title">Title</Label>
+                                                            <Input id="edit-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <Label htmlFor="edit-description">Description</Label>
+                                                            <Textarea id="edit-description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <Label htmlFor="edit-subject">Subject</Label>
+                                                            <Input id="edit-subject" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <Label htmlFor="edit-semester">Semester</Label>
+                                                            <Input id="edit-semester" value={editSemester} onChange={(e) => setEditSemester(e.target.value)} />
+                                                        </div>
+                                                    </div>
+                                                    <DialogFooter>
+                                                        <DialogClose asChild>
+                                                          <Button variant="outline">Cancel</Button>
+                                                        </DialogClose>
+                                                        <Button onClick={handleUpdateResource} disabled={isUpdating}>
+                                                            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                            Save Changes
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+
                                             <AlertDialog onOpenChange={(open) => !open && setResourceToDelete(null)}>
                                                 <AlertDialogTrigger asChild>
                                                     <Button variant="ghost" size="icon" onClick={() => setResourceToDelete(resource)}>
@@ -553,5 +662,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

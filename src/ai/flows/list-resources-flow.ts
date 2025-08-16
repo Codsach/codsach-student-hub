@@ -11,7 +11,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { Octokit } from 'octokit';
-import {run} from 'genkit/experimental';
 
 const ListResourcesInputSchema = z.object({
   githubToken: z.string().describe('The GitHub personal access token.'),
@@ -50,7 +49,7 @@ export type ListResourcesOutput = z.infer<typeof ListResourcesOutputSchema>;
 export async function listResources(
   input: ListResourcesInput
 ): Promise<ListResourcesOutput> {
-  return run('list-resources-flow-run', () => listResourcesFlow(input));
+  return listResourcesFlow(input);
 }
 
 
@@ -59,11 +58,6 @@ const listResourcesFlow = ai.defineFlow(
     name: 'listResourcesFlow',
     inputSchema: ListResourcesInputSchema,
     outputSchema: ListResourcesOutputSchema,
-    experimental: {
-        cache: {
-            ttl: 3600 // Cache for 1 hour
-        }
-    }
   },
   async (input) => {
     const octokit = new Octokit({ auth: input.githubToken });

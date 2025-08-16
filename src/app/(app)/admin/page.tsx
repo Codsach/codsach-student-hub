@@ -58,6 +58,7 @@ export default function AdminPage() {
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
   const [semester, setSemester] = useState('');
+  const [year, setYear] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,6 +80,7 @@ export default function AdminPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [editSemester, setEditSemester] = useState('');
+  const [editYear, setEditYear] = useState('');
 
 
   useEffect(() => {
@@ -196,6 +198,7 @@ export default function AdminPage() {
                   description,
                   subject,
                   semester,
+                  year: category === 'question-papers' ? year : undefined,
                   tags: [category, ...tags],
                   keywords: [],
                 }
@@ -209,6 +212,7 @@ export default function AdminPage() {
                 setDescription('');
                 setSubject('');
                 setSemester('');
+                setYear('');
                 setTags([]);
                 setFile(null);
                 if (fileInputRef.current) {
@@ -276,6 +280,7 @@ export default function AdminPage() {
     setEditDescription(resource.description);
     setEditSubject(resource.subject || '');
     setEditSemester(resource.semester || '');
+    setEditYear(resource.year || '');
     setIsEditModalOpen(true);
   };
   
@@ -296,6 +301,7 @@ export default function AdminPage() {
               description: editDescription,
               subject: editSubject,
               semester: editSemester,
+              year: resourceToEdit.tags[0] === 'question-papers' ? editYear : undefined,
             }
         });
 
@@ -444,10 +450,17 @@ export default function AdminPage() {
                     <Label htmlFor="subject">Subject</Label>
                     <Input id="subject" placeholder="e.g., Data Structures" value={subject} onChange={(e) => setSubject(e.target.value)} />
                   </div>
-                  <div>
-                    <Label htmlFor="semester">Semester</Label>
-                    <Input id="semester" placeholder="e.g., 1, 2, 3" value={semester} onChange={(e) => setSemester(e.target.value)} />
-                  </div>
+                  {category === 'question-papers' ? (
+                     <div>
+                        <Label htmlFor="year">Year</Label>
+                        <Input id="year" placeholder="e.g., 2023" value={year} onChange={(e) => setYear(e.target.value)} />
+                    </div>
+                  ) : (
+                    <div>
+                        <Label htmlFor="semester">Semester</Label>
+                        <Input id="semester" placeholder="e.g., 1, 2, 3" value={semester} onChange={(e) => setSemester(e.target.value)} />
+                    </div>
+                  )}
                 </div>
                  <div>
                     <Label htmlFor="tags">Tags</Label>
@@ -593,10 +606,17 @@ export default function AdminPage() {
                                                             <Label htmlFor="edit-subject">Subject</Label>
                                                             <Input id="edit-subject" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
                                                         </div>
-                                                        <div>
-                                                            <Label htmlFor="edit-semester">Semester</Label>
-                                                            <Input id="edit-semester" value={editSemester} onChange={(e) => setEditSemester(e.target.value)} />
-                                                        </div>
+                                                        {resourceToEdit?.tags[0] === 'question-papers' ? (
+                                                            <div>
+                                                                <Label htmlFor="edit-year">Year</Label>
+                                                                <Input id="edit-year" value={editYear} onChange={(e) => setEditYear(e.target.value)} />
+                                                            </div>
+                                                        ) : (
+                                                            <div>
+                                                                <Label htmlFor="edit-semester">Semester</Label>
+                                                                <Input id="edit-semester" value={editSemester} onChange={(e) => setEditSemester(e.target.value)} />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <DialogFooter>
                                                         <DialogClose asChild>

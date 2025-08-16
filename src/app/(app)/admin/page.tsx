@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle, LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +62,8 @@ export default function AdminPage() {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
-  
+  const [downloadUrl, setDownloadUrl] = useState('');
+
   // State for resource management
   const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
   const [isLoadingResources, setIsLoadingResources] = useState(false);
@@ -81,6 +82,7 @@ export default function AdminPage() {
   const [editSubject, setEditSubject] = useState('');
   const [editSemester, setEditSemester] = useState('');
   const [editYear, setEditYear] = useState('');
+  const [editDownloadUrl, setEditDownloadUrl] = useState('');
 
 
   useEffect(() => {
@@ -167,26 +169,46 @@ export default function AdminPage() {
       setFile(event.target.files[0]);
     }
   };
+  
+  const resetUploadForm = () => {
+    setTitle('');
+    setCategory('');
+    setDescription('');
+    setSubject('');
+    setSemester('');
+    setYear('');
+    setTags([]);
+    setFile(null);
+    setDownloadUrl('');
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
 
   const handleUpload = async () => {
     if (!isConnected) {
         toast({ title: "Error", description: "Please connect to GitHub first.", variant: "destructive" });
         return;
     }
-    if (!title || !category || !description || !file) {
-        toast({ title: "Error", description: "Please fill all required fields and select a file.", variant: "destructive" });
+    if (!title || !category || !description) {
+        toast({ title: "Error", description: "Please fill Title, Category, and Description.", variant: "destructive" });
+        return;
+    }
+     if (category === 'software-tools' && !downloadUrl) {
+        toast({ title: "Error", description: "Please provide a download link for software tools.", variant: "destructive" });
+        return;
+    }
+    if (category !== 'software-tools' && !file) {
+        toast({ title: "Error", description: "Please select a file to upload.", variant: "destructive" });
         return;
     }
     setIsUploading(true);
 
-    try {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64Content = (reader.result as string).split(',')[1];
-            const fileName = file.name.replace(/ /g, '-');
-            const filePath = `${category}/${fileName}`;
+    const processUpload = async (base64Content?: string) => {
+        const fileName = (file?.name || title).replace(/ /g, '-').toLowerCase() + (file ? `.${file.name.split('.').pop()}` : '.json');
+        const filePath = `${category}/${fileName}`;
 
+        try {
             const result = await uploadFile({
                 githubToken: githubToken,
                 repository: 'Codsach/codsach-resources',
@@ -194,47 +216,47 @@ export default function AdminPage() {
                 fileContent: base64Content,
                 commitMessage: `feat: Add ${title}`,
                 metadata: {
-                  title,
-                  description,
-                  subject,
-                  semester,
-                  year: category === 'question-papers' ? year : undefined,
-                  tags: [category, ...tags],
-                  keywords: [],
+                    title,
+                    description,
+                    subject,
+                    semester,
+                    year: category === 'question-papers' ? year : undefined,
+                    tags: [category, ...tags],
+                    keywords: [],
+                    downloadUrl: category === 'software-tools' ? downloadUrl : undefined,
                 }
             });
 
             if (result.success) {
-                toast({ title: "Success", description: `File uploaded successfully! URL: ${result.url}` });
-                // Reset form
-                setTitle('');
-                setCategory('');
-                setDescription('');
-                setSubject('');
-                setSemester('');
-                setYear('');
-                setTags([]);
-                setFile(null);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                }
-                // Refresh resources if on manage tab
-                if(activeTab === 'manage') {
+                toast({ title: "Success", description: `Resource uploaded successfully!` });
+                resetUploadForm();
+                if (activeTab === 'manage') {
                     fetchAllResources();
                 }
             } else {
                 toast({ title: "Upload Failed", description: result.error, variant: "destructive" });
             }
+        } catch (error: any) {
+            toast({ title: "Upload Failed", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+        } finally {
             setIsUploading(false);
+        }
+    };
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const base64Content = (reader.result as string).split(',')[1];
+            processUpload(base64Content);
         };
-        reader.onerror = (error) => {
+        reader.onerror = () => {
              toast({ title: "File Read Error", description: "Could not read the selected file.", variant: "destructive" });
              setIsUploading(false);
         };
-
-    } catch (error: any) {
-        toast({ title: "Upload Failed", description: error.message || "An unexpected error occurred.", variant: "destructive" });
-        setIsUploading(false);
+    } else {
+        // Handle metadata-only upload (for software tools)
+        processUpload();
     }
   };
   
@@ -243,10 +265,17 @@ export default function AdminPage() {
     setIsDeleting(true);
 
     try {
+      const category = resourceToDelete.tags.find(t => ['notes', 'lab-programs', 'question-papers', 'software-tools'].includes(t));
+      if (!category) {
+        throw new Error("Could not determine resource category.");
+      }
+      
+      const filePath = `${category}/${resourceToDelete.fileName}`;
+
       const result = await deleteResource({
         githubToken,
         repository: 'Codsach/codsach-resources',
-        filePath: `${resourceToDelete.tags[0]}/${resourceToDelete.fileName}`,
+        filePath: filePath,
       });
 
       if (result.success) {
@@ -281,6 +310,7 @@ export default function AdminPage() {
     setEditSubject(resource.subject || '');
     setEditSemester(resource.semester || '');
     setEditYear(resource.year || '');
+    setEditDownloadUrl(resource.downloadUrl || '');
     setIsEditModalOpen(true);
   };
   
@@ -289,19 +319,27 @@ export default function AdminPage() {
     setIsUpdating(true);
 
     try {
+        const category = resourceToEdit.tags.find(t => ['notes', 'lab-programs', 'question-papers', 'software-tools'].includes(t));
+        if (!category) {
+            throw new Error("Could not determine resource category.");
+        }
+        const filePath = `${category}/${resourceToEdit.fileName}`;
+        
         const result = await uploadFile({
             githubToken: githubToken,
             repository: 'Codsach/codsach-resources',
-            filePath: `${resourceToEdit.tags[0]}/${resourceToEdit.fileName}`,
-            // fileContent is optional in the flow now, so we can omit it for metadata-only updates
+            filePath: filePath,
+            // fileContent is optional, so we omit it for metadata-only updates
             commitMessage: `feat: Update metadata for ${editTitle}`,
             metadata: {
-              ...resourceToEdit,
               title: editTitle,
               description: editDescription,
               subject: editSubject,
               semester: editSemester,
-              year: resourceToEdit.tags[0] === 'question-papers' ? editYear : undefined,
+              year: category === 'question-papers' ? editYear : undefined,
+              tags: resourceToEdit.tags,
+              keywords: resourceToEdit.keywords,
+              downloadUrl: category === 'software-tools' ? editDownloadUrl : resourceToEdit.downloadUrl,
             }
         });
 
@@ -309,7 +347,6 @@ export default function AdminPage() {
             toast({ title: "Success", description: "Resource updated successfully!" });
             setIsEditModalOpen(false);
             setResourceToEdit(null);
-            // Refresh resources to show updated data
             await fetchAllResources();
         } else {
             toast({ title: "Update Failed", description: result.error, variant: "destructive" });
@@ -479,34 +516,46 @@ export default function AdminPage() {
                       ))}
                     </div>
                 </div>
-                <div>
-                  <Label htmlFor="file-upload">File *</Label>
-                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    {file ? (
-                        <div className='mt-2 text-sm text-gray-600'>
-                            <p>Selected file: {file.name}</p>
-                            <Button variant="link" onClick={() => {
-                                setFile(null);
-                                if(fileInputRef.current) fileInputRef.current.value = '';
-                            }}>Remove</Button>
+
+                {category === 'software-tools' ? (
+                    <div>
+                        <Label htmlFor="download-url">Download Link *</Label>
+                        <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="download-url" placeholder="https://..." className="pl-10" value={downloadUrl} onChange={(e) => setDownloadUrl(e.target.value)} />
                         </div>
-                    ) : (
-                        <div className='mt-4'>
-                           <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose File</Button>
-                           <p className="mt-2 text-sm text-gray-600">or drag and drop</p>
-                           <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
+                    </div>
+                ) : (
+                    <div>
+                        <Label htmlFor="file-upload">File *</Label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="file-upload"
+                            />
+                            {file ? (
+                                <div className='mt-2 text-sm text-gray-600'>
+                                    <p>Selected file: {file.name}</p>
+                                    <Button variant="link" onClick={() => {
+                                        setFile(null);
+                                        if(fileInputRef.current) fileInputRef.current.value = '';
+                                    }}>Remove</Button>
+                                </div>
+                            ) : (
+                                <div className='mt-4'>
+                                <Button variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>Choose File</Button>
+                                <p className="mt-2 text-sm text-gray-600">or drag and drop</p>
+                                <p className="text-xs text-gray-500">PDF, DOC, ZIP, etc. (Max 25MB)</p>
+                                </div>
+                            )}
                         </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                )}
+                
                 <div className="flex justify-end">
                     <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={handleUpload} disabled={isUploading || !isConnected}>
                         {isUploading ? (
@@ -602,20 +651,29 @@ export default function AdminPage() {
                                                             <Label htmlFor="edit-description">Description</Label>
                                                             <Textarea id="edit-description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
                                                         </div>
-                                                        <div>
-                                                            <Label htmlFor="edit-subject">Subject</Label>
-                                                            <Input id="edit-subject" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
-                                                        </div>
-                                                        {resourceToEdit?.tags[0] === 'question-papers' ? (
-                                                            <div>
-                                                                <Label htmlFor="edit-year">Year</Label>
-                                                                <Input id="edit-year" value={editYear} onChange={(e) => setEditYear(e.target.value)} />
-                                                            </div>
+                                                        {resourceToEdit?.tags.includes('software-tools') ? (
+                                                          <div>
+                                                              <Label htmlFor="edit-download-url">Download Link</Label>
+                                                              <Input id="edit-download-url" value={editDownloadUrl} onChange={(e) => setEditDownloadUrl(e.target.value)} />
+                                                          </div>
                                                         ) : (
+                                                          <>
                                                             <div>
-                                                                <Label htmlFor="edit-semester">Semester</Label>
-                                                                <Input id="edit-semester" value={editSemester} onChange={(e) => setEditSemester(e.target.value)} />
+                                                                <Label htmlFor="edit-subject">Subject</Label>
+                                                                <Input id="edit-subject" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} />
                                                             </div>
+                                                            {resourceToEdit?.tags.includes('question-papers') ? (
+                                                                <div>
+                                                                    <Label htmlFor="edit-year">Year</Label>
+                                                                    <Input id="edit-year" value={editYear} onChange={(e) => setEditYear(e.target.value)} />
+                                                                </div>
+                                                            ) : (
+                                                                <div>
+                                                                    <Label htmlFor="edit-semester">Semester</Label>
+                                                                    <Input id="edit-semester" value={editSemester} onChange={(e) => setEditSemester(e.target.value)} />
+                                                                </div>
+                                                            )}
+                                                          </>
                                                         )}
                                                     </div>
                                                     <DialogFooter>

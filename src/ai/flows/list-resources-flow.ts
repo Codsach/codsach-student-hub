@@ -67,60 +67,77 @@ const listResourcesFlow = ai.defineFlow(
         return [];
       }
       
-      const resourceFiles = files.filter(file => !file.name.endsWith('.json') && file.type === 'file');
+      const jsonFiles = files.filter(file => file.name.endsWith('.json') && file.type === 'file');
 
-      const resources = await Promise.all(resourceFiles.map(async (file: any) => {
-        const metadataPath = file.path.replace(/\.[^/.]+$/, "") + '.json';
-        let metadata: any = {
-            title: file.name.replace(/[-_]/g, ' ').replace(/\.[^/.]+$/, ""),
-            description: 'No description available.',
-            tags: [input.category],
-            keywords: [file.name.split('.')[0]],
-            subject: undefined,
-            semester: undefined,
-            year: undefined,
+      const resources = await Promise.all(jsonFiles.map(async (jsonFile: any) => {
+        let metadata: any = {};
+        let fileDetails: any = {
+            size: jsonFile.size,
+            name: jsonFile.name.replace('.json', ''),
+            path: jsonFile.path.replace('.json', ''),
+            download_url: null,
         };
 
         try {
             const { data: metadataFile } = await octokit.rest.repos.getContent({
                 owner,
                 repo,
-                path: metadataPath,
+                path: jsonFile.path,
             });
+
             if ('content' in metadataFile) {
                 const metadataContent = Buffer.from(metadataFile.content, 'base64').toString('utf-8');
-                const parsedMetadata = JSON.parse(metadataContent);
-                metadata = { ...metadata, ...parsedMetadata };
+                metadata = JSON.parse(metadataContent);
             }
         } catch (e) {
-            console.log(`No metadata file found for ${file.name}`);
+            console.error(`Error fetching metadata for ${jsonFile.name}:`, e);
+            // If we can't get metadata, skip this resource
+            return null;
+        }
+
+        // For non-software tools, try to get the corresponding file details
+        if (input.category !== 'software-tools') {
+            try {
+                 const { data: resourceFile } = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: fileDetails.path,
+                 });
+                 if (!Array.isArray(resourceFile)) {
+                     fileDetails = resourceFile;
+                 }
+            } catch(e) {
+                console.log(`No corresponding resource file found for ${jsonFile.name}, maybe it's metadata only.`);
+            }
         }
         
         const commitResponse = await octokit.rest.repos.listCommits({
             owner,
             repo,
-            path: file.path,
+            path: jsonFile.path,
             per_page: 1,
         });
         const lastCommit = commitResponse.data[0];
 
         return {
-          title: metadata.title,
-          description: metadata.description,
-          tags: metadata.tags,
+          title: metadata.title || fileDetails.name.replace(/[-_]/g, ' '),
+          description: metadata.description || 'No description available.',
+          tags: metadata.tags || [input.category],
           subject: metadata.subject,
           semester: metadata.semester,
           year: metadata.year,
           keywords: metadata.keywords || [],
           date: lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString(),
-          size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+          size: `${(fileDetails.size / 1024 / 1024).toFixed(2)} MB`,
           downloads: 0, // Download count would need a separate tracking mechanism
-          downloadUrl: file.download_url,
-          fileName: file.name,
+          downloadUrl: metadata.downloadUrl || fileDetails.download_url,
+          fileName: fileDetails.name,
         };
       }));
 
-      return resources;
+      // Filter out any null results from skipped resources
+      return resources.filter((r): r is ListResourcesOutput[0] => r !== null);
+
     } catch (error: any) {
        if (error.status === 404) {
         return []; // Directory doesn't exist, return empty array

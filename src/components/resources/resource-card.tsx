@@ -1,9 +1,13 @@
 
+'use client';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, HardDrive, Download, Tag, Circle, FileText } from 'lucide-react';
+import { Calendar, HardDrive, Download, Tag, FileText, Eye, X } from 'lucide-react';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { useState } from 'react';
 
 interface ResourceFile {
     name: string;
@@ -26,6 +30,8 @@ interface ResourceCardProps {
 }
 
 export function ResourceCard({ title, description, tags, keywords, date, downloads, files = [], downloadUrl, subject, semester, year }: ResourceCardProps) {
+  const [viewFileUrl, setViewFileUrl] = useState<string | null>(null);
+  const [viewFileName, setViewFileName] = useState<string | null>(null);
   
   const getCategoryName = (tag: string) => {
     switch (tag) {
@@ -52,8 +58,16 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
   };
   
   const totalSize = files.reduce((acc, file) => acc + parseFloat(file.size), 0).toFixed(2);
+  
+  const handleViewFile = (file: ResourceFile) => {
+    if (file.downloadUrl) {
+      setViewFileUrl(file.downloadUrl);
+      setViewFileName(file.name);
+    }
+  }
 
   return (
+    <>
     <Card className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardContent className="p-6 flex-grow">
         <h3 className="text-xl font-bold mb-2">{title}</h3>
@@ -85,11 +99,16 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                   <p className="text-xs text-muted-foreground">{file.size}</p>
                 </div>
               </div>
-              <Button size="sm" asChild disabled={!file.downloadUrl}>
-                <Link href={getDownloadLink(file.downloadUrl)} target="_blank" rel="noopener noreferrer">
-                  <Download className="mr-2 h-4 w-4" /> Download
-                </Link>
-              </Button>
+              <div className='flex gap-2'>
+                <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl}>
+                  <Eye className="mr-2 h-4 w-4" /> View
+                </Button>
+                <Button size="sm" asChild disabled={!file.downloadUrl}>
+                  <Link href={getDownloadLink(file.downloadUrl)} target="_blank" rel="noopener noreferrer">
+                    <Download className="mr-2 h-4 w-4" /> Download
+                  </Link>
+                </Button>
+              </div>
             </div>
           ))}
 
@@ -115,10 +134,12 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
               <Calendar className="h-4 w-4" />
               <span>{date}</span>
             </div>
-            <div className="flex items-center gap-2" title='Total Size'>
-              <HardDrive className="h-4 w-4" />
-              <span>{totalSize} MB</span>
-            </div>
+             {!tags.includes('software-tools') && (
+                <div className="flex items-center gap-2" title='Total Size'>
+                <HardDrive className="h-4 w-4" />
+                <span>{totalSize} MB</span>
+                </div>
+            )}
             <div className="flex items-center gap-2" title='Total Downloads'>
               <Download className="h-4 w-4" />
               <span>{downloads.toLocaleString()}</span>
@@ -126,5 +147,25 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
           </div>
       </div>
     </Card>
+
+    <Dialog open={!!viewFileUrl} onOpenChange={(open) => { if (!open) setViewFileUrl(null); }}>
+        <DialogContent className="max-w-4xl h-[90vh]">
+            <DialogHeader>
+            <DialogTitle>{viewFileName}</DialogTitle>
+             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+            </DialogClose>
+            </DialogHeader>
+            <div className="h-full w-full mt-4">
+            <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(getDownloadLink(viewFileUrl) || '')}&embedded=true`}
+                className="h-full w-full"
+                frameBorder="0"
+            ></iframe>
+            </div>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

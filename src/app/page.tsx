@@ -1,15 +1,15 @@
-
 import { Header } from '@/components/landing/header';
+import { Footer } from '@/components/landing/footer';
 import { Hero } from '@/components/landing/hero';
 import { Stats } from '@/components/landing/stats';
 import { Resources } from '@/components/landing/resources';
 import { Benefits } from '@/components/landing/benefits';
 import { Cta } from '@/components/landing/cta';
-import { Footer } from '@/components/landing/footer';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-dvh bg-white">
+    <div className="flex flex-col min-h-dvh bg-white w-full">
+      <Header />
       <main className="flex-grow">
         <Hero />
         <Stats />
@@ -17,6 +17,7 @@ export default function Home() {
         <Benefits />
         <Cta />
       </main>
+      <Footer />
     </div>
   );
 }

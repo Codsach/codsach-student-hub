@@ -12,18 +12,21 @@ import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
 import { ListFilter, Loader2 } from 'lucide-react';
 import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'next/navigation';
 
-export default function QuestionPapersPage() {
+function QuestionPapersPageContent() {
   const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('date');
+  const searchQuery = searchParams.get('q') || '';
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -71,6 +74,13 @@ export default function QuestionPapersPage() {
     if (yearFilter !== 'all') {
         resources = resources.filter(r => r.year === yearFilter);
     }
+     // Search
+    if (searchQuery) {
+        resources = resources.filter(r => 
+            r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            r.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
     
     // Sorting
     if (sortOrder === 'date') {
@@ -82,7 +92,7 @@ export default function QuestionPapersPage() {
     }
 
     setFilteredResources(resources);
-  }, [allResources, subjectFilter, yearFilter, sortOrder]);
+  }, [allResources, subjectFilter, yearFilter, sortOrder, searchQuery]);
 
   const uniqueSubjects = ['all', ...Array.from(new Set(allResources.map(r => r.subject).filter(Boolean))) as string[]];
   const uniqueYears = ['all', ...Array.from(new Set(allResources.map(r => r.year).filter(Boolean))) as string[]];
@@ -159,9 +169,17 @@ export default function QuestionPapersPage() {
       ) : (
          <div className='text-center py-12'>
             <h3 className='text-xl font-semibold'>No Question Papers Found</h3>
-            <p className='text-muted-foreground mt-2'>Please connect to GitHub in the admin panel and upload some question papers.</p>
+            <p className='text-muted-foreground mt-2'>Please try adjusting your search or filters.</p>
         </div>
       )}
     </div>
   );
+}
+
+export default function QuestionPapersPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <QuestionPapersPageContent />
+        </Suspense>
+    )
 }

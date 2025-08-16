@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '../theme-toggle';
 
 const Logo = () => (
@@ -31,6 +31,9 @@ const Logo = () => (
 export function Header() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -44,6 +47,23 @@ export function Header() {
     router.push('/login');
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const query = e.target.value;
+      setSearchQuery(query);
+      const params = new URLSearchParams(searchParams);
+      if (query) {
+        params.set('q', query);
+      } else {
+        params.delete('q');
+      }
+      router.replace(`${pathname}?${params.toString()}`);
+  }
+  
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+  }, [pathname, searchParams]);
+
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/lab-programs', label: 'Lab Programs' },
@@ -55,7 +75,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
               <Logo />
                <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
@@ -74,10 +94,15 @@ export function Header() {
               ))}
             </nav>
         </div>
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search resources..." className="pl-10 w-48 bg-muted border-none rounded-full" />
+            <Input 
+                placeholder="Search resources..." 
+                className="pl-10 w-48 bg-muted border-none rounded-full"
+                value={searchQuery}
+                onChange={handleSearch}
+             />
           </div>
           <ThemeToggle />
           {isAdminLoggedIn ? (
@@ -128,7 +153,12 @@ export function Header() {
                 <div className="mt-auto p-4 border-t flex flex-col gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search resources..." className="pl-10 w-full" />
+                    <Input 
+                        placeholder="Search resources..." 
+                        className="pl-10 w-full" 
+                        value={searchQuery}
+                        onChange={handleSearch}
+                    />
                   </div>
                    {isAdminLoggedIn ? (
                       <div className='flex flex-col gap-2'>

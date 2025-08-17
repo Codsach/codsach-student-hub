@@ -55,13 +55,6 @@ export function Footer() {
             </div>
           </div>
           
-          <div className="md:w-1/3">
-            <h3 className="font-semibold text-foreground mb-4">About Us</h3>
-            <p className="text-sm">
-                Codsach is a student-focused platform designed to provide easy access to academic resources. We offer a curated collection of lab programs, study notes, previous year question papers, and essential software tools. Our goal is to simplify the learning process with an intuitive interface and one-click downloads, helping students excel in their MCA journey.
-            </p>
-          </div>
-
           <div>
             <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
             <div className="flex items-center gap-2 text-sm">

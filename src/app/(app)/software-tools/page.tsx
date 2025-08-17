@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { SoftwareToolsClient } from '@/components/resources/software-tools-client';
 
+export const revalidate = 0;
+
 export default async function SoftwareToolsPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;

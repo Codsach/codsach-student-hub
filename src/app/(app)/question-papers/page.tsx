@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { QuestionPapersClient } from '@/components/resources/question-papers-client';
 
+export const revalidate = 0;
+
 export default async function QuestionPapersPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;

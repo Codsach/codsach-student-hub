@@ -30,6 +30,7 @@ const Logo = () => (
 
 export function Header() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -60,6 +61,7 @@ export function Header() {
       } else {
         router.push('/search');
       }
+      setIsMobileMenuOpen(false);
   }
 
   const navLinks = [
@@ -123,7 +125,7 @@ export function Header() {
           )}
         </div>
         <div className="md:hidden">
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
                 <Menu className="h-5 w-5" />
@@ -149,6 +151,7 @@ export function Header() {
                     <Link
                       key={link.label}
                       href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                     >
                       {link.label}
@@ -169,15 +172,15 @@ export function Header() {
                   </form>
                    {isAdminLoggedIn ? (
                       <div className='flex flex-col gap-2'>
-                        <Button asChild className='rounded-full' variant="outline">
+                        <Button asChild className='rounded-full' variant="outline" onClick={() => setIsMobileMenuOpen(false)}>
                           <Link href="/admin">Admin Panel</Link>
                         </Button>
-                        <Button onClick={handleLogout} className='rounded-full'>
+                        <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className='rounded-full'>
                           <LogOut className="mr-2 h-4 w-4" /> Logout
                         </Button>
                       </div>
                     ) : (
-                      <Button asChild className='rounded-full'>
+                      <Button asChild className='rounded-full' onClick={() => setIsMobileMenuOpen(false)}>
                         <Link href="/login">Login</Link>
                       </Button>
                     )}

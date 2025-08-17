@@ -8,53 +8,24 @@ import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
-function SearchPageContent() {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>([]);
-  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function SearchPageContent({allFetchedResources, serverError}: {allFetchedResources: ListResourcesOutput, serverError: string | null}) {
+  const [allResources, setAllResources] = useState<ListResourcesOutput>(allFetchedResources);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(allFetchedResources);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
-
-  useEffect(() => {
-    const fetchResources = async () => {
-      setIsLoading(true);
-      // This is a secure server action proxy. The client does not need a token.
-      try {
-        const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
-        const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-
-        if (!githubToken) {
-          throw new Error('GitHub token is not configured on the server.');
-        }
-
-        const resourcePromises = categories.map(category => 
-            listResources({
-                githubToken,
-                repository: 'Codsach/codsach-resources',
-                category,
-            })
-        );
-        const results = await Promise.all(resourcePromises);
-        const allFetchedResources = results.flat();
-
-        setAllResources(allFetchedResources);
-      } catch (error: any) {
-        console.error("Failed to fetch resources for search:", error);
-        toast({
-          title: 'Error',
-          description: error.message || 'Could not fetch resources from GitHub for search.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchResources();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast]);
   
+   useEffect(() => {
+    if (serverError) {
+        toast({
+            title: 'Error',
+            description: serverError,
+            variant: 'destructive',
+        });
+    }
+  }, [serverError, toast]);
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -111,6 +82,34 @@ function SearchPageContent() {
   );
 }
 
+
+async function SearchPageData() {
+    let resources: ListResourcesOutput = [];
+    let error: string | null = null;
+    try {
+        const githubToken = process.env.GITHUB_TOKEN;
+        if (githubToken) {
+             const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
+             const resourcePromises = categories.map(category => 
+                listResources({
+                    githubToken,
+                    repository: 'Codsach/codsach-resources',
+                    category,
+                })
+            );
+            const results = await Promise.all(resourcePromises);
+            resources = results.flat();
+        } else {
+             error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
+        }
+    } catch (e: any) {
+        console.error("Failed to fetch resources for search on server:", e);
+        error = "Could not fetch resources from GitHub for search on the server.";
+    }
+    return <SearchPageContent allFetchedResources={resources} serverError={error} />;
+}
+
+
 export default function SearchPage() {
     return (
         <Suspense fallback={
@@ -120,7 +119,7 @@ export default function SearchPage() {
                 </div>
             </div>
         }>
-            <SearchPageContent />
+            <SearchPageData />
         </Suspense>
     )
 }

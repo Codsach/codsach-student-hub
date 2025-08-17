@@ -93,7 +93,7 @@ const listResourcesFlow = ai.defineFlow(
       
       const fileShas = new Set(metadataFiles.map(f => f.sha).filter(Boolean) as string[]);
 
-      // 4. Fetch all metadata blobs in parallel
+      // 4. Fetch all metadata blobs in parallel - THIS IS THE KEY OPTIMIZATION
       const blobPromises = Array.from(fileShas).map(file_sha => 
         octokit.rest.git.getBlob({ owner, repo, file_sha })
       );
@@ -101,7 +101,7 @@ const listResourcesFlow = ai.defineFlow(
       
       const metadataBySha: Record<string, any> = {};
       blobResults.forEach(response => {
-        const sha = response.url.split('/').pop();
+        const sha = response.data.sha;
         if (sha) {
             metadataBySha[sha] = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf-8'));
         }
@@ -126,6 +126,8 @@ const listResourcesFlow = ai.defineFlow(
         const folderPath = metadataFile.path.substring(0, metadataFile.path.lastIndexOf('/'));
         const folderName = folderPath.substring(folderPath.lastIndexOf('/') + 1);
         const metadata = metadataBySha[metadataFile.sha];
+
+        if (!metadata) return null; // Skip if metadata wasn't fetched
         
         const resourceFiles = allFilesByFolder[folderPath] || [];
 
@@ -135,6 +137,10 @@ const listResourcesFlow = ai.defineFlow(
             downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
         }));
 
+        // Get a reasonable date. Use metadata date, or a default.
+        // We avoid fetching commit history for performance.
+        const resourceDate = metadata.date || new Date().toISOString();
+
         return {
           title: metadata.title || folderName.replace(/[-_]/g, ' '),
           description: metadata.description || 'No description available.',
@@ -143,7 +149,7 @@ const listResourcesFlow = ai.defineFlow(
           semester: metadata.semester,
           year: metadata.year,
           keywords: metadata.keywords || [],
-          date: new Date().toISOString(), // Use ISO string for consistent sorting
+          date: resourceDate,
           downloads: 0, // Placeholder
           folderName: folderName,
           downloadUrl: metadata.downloadUrl,
@@ -151,7 +157,7 @@ const listResourcesFlow = ai.defineFlow(
         };
       });
 
-      // Sort by date descending
+      // Filter out nulls and sort by date descending
       const filteredResources = resources.filter((r): r is ListResourcesOutput[0] => r !== null);
       filteredResources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       

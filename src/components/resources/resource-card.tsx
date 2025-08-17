@@ -8,7 +8,7 @@ import { Calendar, HardDrive, Download, Tag, FileText, Eye, X } from 'lucide-rea
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { downloadFile } from '@/lib/utils';
+import { downloadFile, getDirectGoogleDriveDownloadUrl } from '@/lib/utils';
 
 
 interface ResourceFile {
@@ -121,9 +121,9 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                     <p className="text-sm font-medium">{title}</p>
                 </div>
                 <Button size="sm" asChild>
-                    <Link href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={getDirectGoogleDriveDownloadUrl(downloadUrl)} target="_blank" rel="noopener noreferrer">
                         <Download className="mr-2 h-4 w-4" /> Download
-                    </Link>
+                    </a>
                 </Button>
              </div>
           )}
@@ -157,7 +157,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
             </DialogHeader>
             <div className="flex-1 w-full">
               <iframe
-                  src={`https://docs.google.com/gview?url=${encodeURIComponent(viewFileUrl || '')}&embedded=true`}
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(getDirectGoogleDriveDownloadUrl(viewFileUrl || ''))}&embedded=true`}
                   className="h-full w-full"
                   frameBorder="0"
               ></iframe>

@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { QuestionPapersClient } from '@/components/resources/question-papers-client';
 
-async function QuestionPapersPageData() {
+export default async function QuestionPapersPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
@@ -22,12 +22,7 @@ async function QuestionPapersPageData() {
         console.error("Failed to fetch question papers on server:", e);
         error = "Could not fetch resources from GitHub on the server.";
     }
-
-    return <QuestionPapersClient initialResources={resources} serverError={error} />;
-}
-
-
-export default function QuestionPapersPage() {
+    
     return (
         <Suspense fallback={
             <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -36,7 +31,7 @@ export default function QuestionPapersPage() {
                 </div>
             </div>
         }>
-            <QuestionPapersPageData />
+            <QuestionPapersClient initialResources={resources} serverError={error} />
         </Suspense>
     )
 }

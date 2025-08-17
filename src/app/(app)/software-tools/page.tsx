@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { SoftwareToolsClient } from '@/components/resources/software-tools-client';
 
-async function SoftwareToolsPageData() {
+export default async function SoftwareToolsPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
@@ -25,11 +25,6 @@ async function SoftwareToolsPageData() {
         error = "Could not fetch resources from GitHub on the server.";
     }
     
-    return <SoftwareToolsClient initialResources={resources} serverError={error} />;
-}
-
-
-export default function SoftwareToolsPage() {
     return (
         <Suspense fallback={
             <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -38,7 +33,7 @@ export default function SoftwareToolsPage() {
                 </div>
             </div>
         }>
-            <SoftwareToolsPageData />
+            <SoftwareToolsClient initialResources={resources} serverError={error} />
         </Suspense>
     )
 }

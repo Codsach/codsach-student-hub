@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { NotesClient } from '@/components/resources/notes-client';
 
+export const revalidate = 0;
+
 export default async function NotesPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;

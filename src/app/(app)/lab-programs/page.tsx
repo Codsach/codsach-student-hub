@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LabProgramsClient } from '@/components/resources/lab-programs-client';
 
+export const revalidate = 0;
+
 export default async function LabProgramsPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;

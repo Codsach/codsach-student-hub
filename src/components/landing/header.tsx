@@ -166,6 +166,7 @@ export function Header() {
                           placeholder="Search resources..." 
                           className="pl-10 w-full" 
                           defaultValue={searchQuery}
+                          autoFocus={false}
                       />
                     </div>
                   </form>

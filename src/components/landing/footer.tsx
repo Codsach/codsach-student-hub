@@ -30,7 +30,7 @@ export function Footer() {
   return (
     <footer className="bg-background text-muted-foreground">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-10 md:gap-8">
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-2xl group">
               <Logo />
@@ -54,6 +54,14 @@ export function Footer() {
               ))}
             </div>
           </div>
+          
+          <div className="md:w-1/3">
+            <h3 className="font-semibold text-foreground mb-4">About Us</h3>
+            <p className="text-sm">
+                Codsach is a student-focused platform designed to provide easy access to academic resources. We offer a curated collection of lab programs, study notes, previous year question papers, and essential software tools. Our goal is to simplify the learning process with an intuitive interface and one-click downloads, helping students excel in their MCA journey.
+            </p>
+          </div>
+
           <div>
             <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
             <div className="flex items-center gap-2 text-sm">

@@ -57,6 +57,9 @@ const listResourcesFlow = ai.defineFlow(
     name: 'listResourcesFlow',
     inputSchema: ListResourcesInputSchema,
     outputSchema: ListResourcesOutputSchema,
+    cache: {
+      ttl: 3600, // Cache for 1 hour
+    }
   },
   async (input) => {
     const octokit = new Octokit({ auth: input.githubToken });
@@ -85,61 +88,74 @@ const listResourcesFlow = ai.defineFlow(
       
       // 3. Filter the tree to find metadata.json files within the specified category
       const metadataFiles = tree.tree.filter(
-        (file) => file.path?.startsWith(input.category + '/') && file.path.endsWith('/metadata.json')
+        (file) => file.path?.startsWith(input.category + '/') && file.path.endsWith('/metadata.json') && file.type === 'blob'
       );
+      
+      const fileShas = new Set(metadataFiles.map(f => f.sha).filter(Boolean) as string[]);
 
-      // 4. Process each resource in parallel
-      const resources = await Promise.all(
-        metadataFiles.map(async (metadataFile) => {
-          try {
-            if (!metadataFile.path || !metadataFile.sha) return null;
+      // 4. Fetch all metadata blobs in parallel
+      const blobPromises = Array.from(fileShas).map(file_sha => 
+        octokit.rest.git.getBlob({ owner, repo, file_sha })
+      );
+      const blobResults = await Promise.all(blobPromises);
+      
+      const metadataBySha: Record<string, any> = {};
+      blobResults.forEach(response => {
+        const sha = response.url.split('/').pop();
+        if (sha) {
+            metadataBySha[sha] = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf-8'));
+        }
+      });
 
-            const folderPath = metadataFile.path.substring(0, metadataFile.path.lastIndexOf('/'));
-            const folderName = folderPath.substring(folderPath.lastIndexOf('/') + 1);
-
-            // Fetch metadata content
-            const { data: metadataContent } = await octokit.rest.git.getBlob({
-              owner,
-              repo,
-              file_sha: metadataFile.sha,
-            });
-            const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
-
-            // Find all files belonging to this resource from the full tree
-            const resourceFilesData = tree.tree.filter(
-              (file) => file.path?.startsWith(folderPath + '/') && !file.path.endsWith('metadata.json') && file.type === 'blob'
-            );
-            
-            const date = new Date().toLocaleDateString();
-
-            const files: z.infer<typeof FileSchema>[] = resourceFilesData.map(file => ({
-                name: file.path?.substring(folderPath.length + 1) || '',
-                size: `${((file.size || 0) / 1024 / 1024).toFixed(2)} MB`,
-                downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
-            }));
-            
-            return {
-              title: metadata.title || folderName.replace(/[-_]/g, ' '),
-              description: metadata.description || 'No description available.',
-              tags: metadata.tags || [input.category],
-              subject: metadata.subject,
-              semester: metadata.semester,
-              year: metadata.year,
-              keywords: metadata.keywords || [],
-              date: date,
-              downloads: 0, // Placeholder
-              folderName: folderName,
-              downloadUrl: metadata.downloadUrl,
-              files: files,
-            };
-          } catch (e) {
-            console.error(`Error processing resource for ${metadataFile.path}:`, e);
-            return null;
+      // 5. Process all files into a structured map for efficient lookup
+      const allFilesByFolder: Record<string, any[]> = {};
+       tree.tree.forEach(file => {
+          if (file.path && file.type === 'blob' && !file.path.endsWith('metadata.json')) {
+              const folderPath = file.path.substring(0, file.path.lastIndexOf('/'));
+              if (!allFilesByFolder[folderPath]) {
+                  allFilesByFolder[folderPath] = [];
+              }
+              allFilesByFolder[folderPath].push(file);
           }
-        })
-      );
+      });
+      
+      // 6. Construct the final resources array
+      const resources = metadataFiles.map(metadataFile => {
+        if (!metadataFile.path || !metadataFile.sha) return null;
+        
+        const folderPath = metadataFile.path.substring(0, metadataFile.path.lastIndexOf('/'));
+        const folderName = folderPath.substring(folderPath.lastIndexOf('/') + 1);
+        const metadata = metadataBySha[metadataFile.sha];
+        
+        const resourceFiles = allFilesByFolder[folderPath] || [];
 
-      return resources.filter((r): r is ListResourcesOutput[0] => r !== null);
+        const files: z.infer<typeof FileSchema>[] = resourceFiles.map(file => ({
+            name: file.path?.substring(folderPath.length + 1) || '',
+            size: `${((file.size || 0) / 1024 / 1024).toFixed(2)} MB`,
+            downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
+        }));
+
+        return {
+          title: metadata.title || folderName.replace(/[-_]/g, ' '),
+          description: metadata.description || 'No description available.',
+          tags: metadata.tags || [input.category],
+          subject: metadata.subject,
+          semester: metadata.semester,
+          year: metadata.year,
+          keywords: metadata.keywords || [],
+          date: new Date().toISOString(), // Use ISO string for consistent sorting
+          downloads: 0, // Placeholder
+          folderName: folderName,
+          downloadUrl: metadata.downloadUrl,
+          files: files,
+        };
+      });
+
+      // Sort by date descending
+      const filteredResources = resources.filter((r): r is ListResourcesOutput[0] => r !== null);
+      filteredResources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      return filteredResources;
 
     } catch (error: any) {
        if (error.status === 404) {
@@ -147,7 +163,7 @@ const listResourcesFlow = ai.defineFlow(
         return []; 
       }
       console.error('Failed to list resources from GitHub:', error);
-      return []; // Return empty on other errors to prevent site crash
+      throw new Error('Failed to list resources from GitHub.');
     }
   }
 );

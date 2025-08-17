@@ -8,8 +8,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
-export const revalidate = 0;
-
 function SearchPageContent() {
   const [allFetchedResources, setAllFetchedResources] = useState<ListResourcesOutput>([]);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);

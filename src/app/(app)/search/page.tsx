@@ -19,22 +19,15 @@ function SearchPageContent() {
   useEffect(() => {
     const fetchResources = async () => {
       setIsLoading(true);
-      // In a real app, this would be an API call to a secure backend endpoint
-      // that uses the GITHUB_TOKEN on the server.
-      // For this setup, we'll rely on the localStorage token for client-side search.
-      const githubToken = localStorage.getItem('githubToken');
-      
-      if (!githubToken) {
-         toast({
-          title: 'GitHub Token Not Found',
-          description: 'A GitHub token is needed for search. Please connect on the Admin page.',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
+      // This is a secure server action proxy. The client does not need a token.
       try {
         const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
+        const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+
+        if (!githubToken) {
+          throw new Error('GitHub token is not configured on the server.');
+        }
+
         const resourcePromises = categories.map(category => 
             listResources({
                 githubToken,
@@ -46,11 +39,11 @@ function SearchPageContent() {
         const allFetchedResources = results.flat();
 
         setAllResources(allFetchedResources);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch resources for search:", error);
         toast({
           title: 'Error',
-          description: 'Could not fetch resources from GitHub for search.',
+          description: error.message || 'Could not fetch resources from GitHub for search.',
           variant: 'destructive',
         });
       } finally {
@@ -59,6 +52,7 @@ function SearchPageContent() {
     };
 
     fetchResources();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
   
   useEffect(() => {

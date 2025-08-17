@@ -1,5 +1,6 @@
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
+import { Suspense } from 'react';
 
 export default function AppLayout({
   children,
@@ -8,7 +9,9 @@ export default function AppLayout({
 }) {
   return (
     <div className="flex flex-col min-h-dvh bg-muted/20 w-full">
-      <Header />
+      <Suspense>
+        <Header />
+      </Suspense>
       <main className="flex-grow">{children}</main>
       <Footer />
     </div>

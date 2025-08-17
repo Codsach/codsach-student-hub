@@ -106,7 +106,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                 <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl} className="flex-1">
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
-                <Button size="sm" onClick={() => handleDownload(file)} disabled={!file.downloadUrl || isDownloading === file.name} className="flex-1">
+                <Button size="sm" onClick={() => handleDownload(file)} disabled={!file.downloadUrl || isDownloading === file.name} className="flex-1 hover-glow">
                     <Download className={`mr-2 h-4 w-4 ${isDownloading === file.name ? 'animate-pulse' : ''}`} /> 
                     {isDownloading === file.name ? '...' : 'Download'}
                 </Button>
@@ -120,7 +120,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
                     <FileText className='h-5 w-5 text-primary' />
                     <p className="text-sm font-medium">{title}</p>
                 </div>
-                <Button size="sm" asChild>
+                <Button size="sm" asChild className="hover-glow">
                     <a href={getDirectGoogleDriveDownloadUrl(downloadUrl)} target="_blank" rel="noopener noreferrer">
                         <Download className="mr-2 h-4 w-4" /> Download
                     </a>

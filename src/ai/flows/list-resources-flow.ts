@@ -57,9 +57,6 @@ const listResourcesFlow = ai.defineFlow(
     name: 'listResourcesFlow',
     inputSchema: ListResourcesInputSchema,
     outputSchema: ListResourcesOutputSchema,
-    cache: {
-      ttl: 3600, // Cache for 1 hour
-    }
   },
   async (input) => {
     const octokit = new Octokit({ auth: input.githubToken });

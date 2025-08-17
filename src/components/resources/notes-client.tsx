@@ -16,12 +16,13 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 
 export function NotesClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
   const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
-  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(initialResources);
-  const [isLoading, setIsLoading] = useState(false);
+  const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -43,6 +44,7 @@ export function NotesClient({ initialResources, serverError }: { initialResource
   }, [serverError, toast]);
 
    useEffect(() => {
+    setIsLoading(true);
     let resourcesToFilter = [...resources];
 
     // Filtering
@@ -73,6 +75,7 @@ export function NotesClient({ initialResources, serverError }: { initialResource
     }
 
     setFilteredResources(resourcesToFilter);
+    setIsLoading(false);
   }, [resources, subjectFilter, semesterFilter, sortOrder, searchQuery]);
 
   const uniqueSubjects = ['all', ...Array.from(new Set(resources.map(r => r.subject).filter(Boolean))) as string[]];
@@ -188,25 +191,34 @@ export function NotesClient({ initialResources, serverError }: { initialResource
         </div>
       </div>
       
-       {isLoading ? (
-         <div className='flex justify-center items-center py-12'>
-            <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        </div>
-       ) : filteredResources.length > 0 ? (
-        <>
-          <p className="text-sm text-muted-foreground mb-6">Showing {filteredResources.length} of {resources.length} resources</p>
-          <div className="space-y-6">
-            {filteredResources.map((resource, index) => (
-              <ResourceCard key={index} {...resource} />
-            ))}
+       <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-background/80 flex justify-center items-center z-10 rounded-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        </>
-      ) : (
-         <div className='text-center py-12'>
-            <h3 className='text-xl font-semibold'>No Notes Found</h3>
-            <p className='text-muted-foreground mt-2'>Please ensure the GITHUB_TOKEN is set on the server and resources have been uploaded.</p>
+        )}
+        <div className={cn(isLoading ? 'opacity-50' : '')}>
+          {filteredResources.length > 0 ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-6">
+                Showing {filteredResources.length} of {resources.length} resources
+              </p>
+              <div className="space-y-6">
+                {filteredResources.map((resource, index) => (
+                  <ResourceCard key={index} {...resource} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-semibold">No Notes Found</h3>
+              <p className="text-muted-foreground mt-2">
+                Try adjusting your filters or search query.
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

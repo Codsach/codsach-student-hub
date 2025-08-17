@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { NotesClient } from '@/components/resources/notes-client';
 
-async function NotesPageData() {
+export default async function NotesPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
 
@@ -25,11 +25,6 @@ async function NotesPageData() {
         error = "Could not fetch resources from GitHub on the server.";
     }
 
-    return <NotesClient initialResources={resources} serverError={error} />;
-}
-
-
-export default function NotesPage() {
     return (
         <Suspense fallback={
             <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -38,7 +33,7 @@ export default function NotesPage() {
                 </div>
             </div>
         }>
-            <NotesPageData />
+            <NotesClient initialResources={resources} serverError={error} />
         </Suspense>
     )
 }

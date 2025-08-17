@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LabProgramsClient } from '@/components/resources/lab-programs-client';
 
-async function LabProgramsPageData() {
+export default async function LabProgramsPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
@@ -23,11 +23,6 @@ async function LabProgramsPageData() {
         error = "Could not fetch resources from GitHub on the server.";
     }
 
-    return <LabProgramsClient initialResources={resources} serverError={error} />;
-}
-
-
-export default function LabProgramsPage() {
     return (
         <Suspense fallback={
             <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -36,7 +31,7 @@ export default function LabProgramsPage() {
                 </div>
             </div>
         }>
-            <LabProgramsPageData />
+            <LabProgramsClient initialResources={resources} serverError={error} />
         </Suspense>
     )
 }

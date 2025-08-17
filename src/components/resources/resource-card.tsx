@@ -94,21 +94,21 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
 
         <div className="space-y-3">
           {files.map((file, index) => (
-            <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+            <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-md bg-muted/50 gap-3">
               <div className='flex items-center gap-3'>
-                <FileText className='h-5 w-5 text-primary' />
-                <div>
-                  <p className="text-sm font-medium">{file.name}</p>
+                <FileText className='h-5 w-5 text-primary flex-shrink-0' />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">{file.size}</p>
                 </div>
               </div>
-              <div className='flex gap-2'>
-                <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl}>
+              <div className='flex gap-2 w-full sm:w-auto flex-shrink-0'>
+                <Button size="sm" variant="outline" onClick={() => handleViewFile(file)} disabled={!file.downloadUrl} className="flex-1">
                   <Eye className="mr-2 h-4 w-4" /> View
                 </Button>
-                <Button size="sm" onClick={() => handleDownload(file)} disabled={!file.downloadUrl || isDownloading === file.name}>
+                <Button size="sm" onClick={() => handleDownload(file)} disabled={!file.downloadUrl || isDownloading === file.name} className="flex-1">
                     <Download className={`mr-2 h-4 w-4 ${isDownloading === file.name ? 'animate-pulse' : ''}`} /> 
-                    {isDownloading === file.name ? 'Downloading...' : 'Download'}
+                    {isDownloading === file.name ? '...' : 'Download'}
                 </Button>
               </div>
             </div>

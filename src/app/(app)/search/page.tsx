@@ -19,14 +19,15 @@ function SearchPageContent() {
   useEffect(() => {
     const fetchResources = async () => {
       setIsLoading(true);
-      const githubToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN || localStorage.getItem('githubToken');
+      // In a real app, this would be an API call to a secure backend endpoint
+      // that uses the GITHUB_TOKEN on the server.
+      // For this setup, we'll rely on the localStorage token for client-side search.
+      const githubToken = localStorage.getItem('githubToken');
       
       if (!githubToken) {
-        // This case should ideally not be hit if the server pre-renders,
-        // but it's a fallback for client-side search or if server fails.
          toast({
-          title: 'GitHub Not Connected',
-          description: 'Please set the GITHUB_TOKEN environment variable for searching.',
+          title: 'GitHub Token Not Found',
+          description: 'A GitHub token is needed for search. Please connect on the Admin page.',
           variant: 'destructive',
         });
         setIsLoading(false);

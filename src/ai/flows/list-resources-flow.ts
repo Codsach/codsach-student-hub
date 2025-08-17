@@ -5,7 +5,7 @@
  *
  * - listResources - A function that handles listing resources from GitHub.
  * - ListResourcesInput - The input type for the listResources function.
- * - ListResourcesOutput - The return type for the listResources function.
+ * - ListResourcesOutput - The return type for the listResourcesOutput function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -110,15 +110,7 @@ const listResourcesFlow = ai.defineFlow(
               (file) => file.path?.startsWith(folderPath + '/') && !file.path.endsWith('metadata.json') && file.type === 'blob'
             );
             
-            // Get last commit date for the metadata file
-            const commitResponse = await octokit.rest.repos.listCommits({
-                owner,
-                repo,
-                path: metadataFile.path,
-                per_page: 1,
-            });
-            const lastCommit = commitResponse.data[0];
-            const date = lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString();
+            const date = new Date().toLocaleDateString();
 
             const files: z.infer<typeof FileSchema>[] = resourceFilesData.map(file => ({
                 name: file.path?.substring(folderPath.length + 1) || '',

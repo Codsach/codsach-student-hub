@@ -124,7 +124,8 @@ export function Header() {
             </Button>
           )}
         </div>
-        <div className="md:hidden">
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
@@ -132,20 +133,18 @@ export function Header() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0 flex flex-col">
               <SheetHeader className="p-4 border-b">
-                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="flex items-center justify-between">
-                   <Link href="/" className="flex items-center gap-2 font-bold text-xl group">
+                 <SheetTitle>
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl group" onClick={() => setIsMobileMenuOpen(false)}>
                      <Logo />
                      <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
                       Codsach
                     </h1>
                    </Link>
-                   <ThemeToggle />
-                </div>
+                </SheetTitle>
               </SheetHeader>
-              <div className="flex flex-col h-full">
+              <div className="flex-grow flex flex-col justify-between">
                 <nav className="flex flex-col gap-4 p-4">
                   {navLinks.map((link) => (
                     <Link
@@ -158,7 +157,7 @@ export function Header() {
                     </Link>
                   ))}
                 </nav>
-                <div className="mt-auto p-4 border-t flex flex-col gap-4">
+                <div className="p-4 border-t flex flex-col gap-4">
                   <form onSubmit={handleSearch}>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -172,15 +171,15 @@ export function Header() {
                   </form>
                    {isAdminLoggedIn ? (
                       <div className='flex flex-col gap-2'>
-                        <Button asChild className='rounded-full' variant="outline" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button asChild className='w-full' variant="outline" onClick={() => setIsMobileMenuOpen(false)}>
                           <Link href="/admin">Admin Panel</Link>
                         </Button>
-                        <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className='rounded-full'>
+                        <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className='w-full'>
                           <LogOut className="mr-2 h-4 w-4" /> Logout
                         </Button>
                       </div>
                     ) : (
-                      <Button asChild className='rounded-full' onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button asChild className='w-full' onClick={() => setIsMobileMenuOpen(false)}>
                         <Link href="/login">Login</Link>
                       </Button>
                     )}

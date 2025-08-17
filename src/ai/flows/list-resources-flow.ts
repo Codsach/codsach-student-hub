@@ -52,7 +52,6 @@ export async function listResources(
   return listResourcesFlow(input);
 }
 
-
 const listResourcesFlow = ai.defineFlow(
   {
     name: 'listResourcesFlow',
@@ -64,81 +63,99 @@ const listResourcesFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      const { data: resourceFolders } = await octokit.rest.repos.getContent({
+      // 1. Get the SHA of the latest commit on the main branch
+      const { data: branch } = await octokit.rest.repos.getBranch({
         owner,
         repo,
-        path: input.category,
+        branch: 'main', // Or your default branch
+      });
+      const latestCommitSha = branch.commit.sha;
+
+      // 2. Get the entire repository tree recursively in a single call
+      const { data: tree } = await octokit.rest.git.getTree({
+        owner,
+        repo,
+        tree_sha: latestCommitSha,
+        recursive: '1',
       });
 
-      if (!Array.isArray(resourceFolders)) {
+      if (!tree.tree) {
         return [];
       }
       
-      const directories = resourceFolders.filter(item => item.type === 'dir');
+      // 3. Filter the tree to find metadata.json files within the specified category
+      const metadataFiles = tree.tree.filter(
+        (file) => file.path?.startsWith(input.category + '/') && file.path.endsWith('/metadata.json')
+      );
 
-      const resources = await Promise.all(directories.map(async (dir: any) => {
-        let metadata: any = {};
-        
-        try {
-            const { data: metadataFile } = await octokit.rest.repos.getContent({
+      // 4. Process each resource in parallel
+      const resources = await Promise.all(
+        metadataFiles.map(async (metadataFile) => {
+          try {
+            if (!metadataFile.path || !metadataFile.sha) return null;
+
+            const folderPath = metadataFile.path.substring(0, metadataFile.path.lastIndexOf('/'));
+            const folderName = folderPath.substring(folderPath.lastIndexOf('/') + 1);
+
+            // Fetch metadata content
+            const { data: metadataContent } = await octokit.rest.git.getBlob({
+              owner,
+              repo,
+              file_sha: metadataFile.sha,
+            });
+            const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
+
+            // Find all files belonging to this resource from the full tree
+            const resourceFilesData = tree.tree.filter(
+              (file) => file.path?.startsWith(folderPath + '/') && !file.path.endsWith('metadata.json') && file.type === 'blob'
+            );
+            
+            // Get last commit date for the metadata file
+            const commitResponse = await octokit.rest.repos.listCommits({
                 owner,
                 repo,
-                path: `${dir.path}/metadata.json`,
+                path: metadataFile.path,
+                per_page: 1,
             });
+            const lastCommit = commitResponse.data[0];
+            const date = lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString();
 
-            if ('content' in metadataFile) {
-                const metadataContent = Buffer.from(metadataFile.content, 'base64').toString('utf-8');
-                metadata = JSON.parse(metadataContent);
-            }
-        } catch (e) {
-            console.error(`Error fetching metadata for ${dir.name}:`, e);
+            const files: z.infer<typeof FileSchema>[] = resourceFilesData.map(file => ({
+                name: file.path?.substring(folderPath.length + 1) || '',
+                size: `${((file.size || 0) / 1024 / 1024).toFixed(2)} MB`,
+                downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
+            }));
+            
+            return {
+              title: metadata.title || folderName.replace(/[-_]/g, ' '),
+              description: metadata.description || 'No description available.',
+              tags: metadata.tags || [input.category],
+              subject: metadata.subject,
+              semester: metadata.semester,
+              year: metadata.year,
+              keywords: metadata.keywords || [],
+              date: date,
+              downloads: 0, // Placeholder
+              folderName: folderName,
+              downloadUrl: metadata.downloadUrl,
+              files: files,
+            };
+          } catch (e) {
+            console.error(`Error processing resource for ${metadataFile.path}:`, e);
             return null;
-        }
-
-        const { data: dirContents } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: dir.path,
-        });
-
-        const resourceFiles = Array.isArray(dirContents) ? dirContents.filter(item => item.name !== 'metadata.json') : [];
-
-        const commitResponse = await octokit.rest.repos.listCommits({
-            owner,
-            repo,
-            path: `${dir.path}/metadata.json`,
-            per_page: 1,
-        });
-        const lastCommit = commitResponse.data[0];
-
-        return {
-          title: metadata.title || dir.name.replace(/[-_]/g, ' '),
-          description: metadata.description || 'No description available.',
-          tags: metadata.tags || [input.category],
-          subject: metadata.subject,
-          semester: metadata.semester,
-          year: metadata.year,
-          keywords: metadata.keywords || [],
-          date: lastCommit ? new Date(lastCommit.commit.author?.date!).toLocaleDateString() : new Date().toLocaleDateString(),
-          downloads: 0, 
-          folderName: dir.name,
-          downloadUrl: metadata.downloadUrl,
-          files: resourceFiles.map((file: any) => ({
-            name: file.name,
-            size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-            downloadUrl: file.download_url,
-          }))
-        };
-      }));
+          }
+        })
+      );
 
       return resources.filter((r): r is ListResourcesOutput[0] => r !== null);
 
     } catch (error: any) {
        if (error.status === 404) {
+        console.warn(`Category "${input.category}" not found or repository is empty.`);
         return []; 
       }
       console.error('Failed to list resources from GitHub:', error);
-      return [];
+      return []; // Return empty on other errors to prevent site crash
     }
   }
 );

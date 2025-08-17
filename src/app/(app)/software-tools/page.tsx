@@ -8,21 +8,21 @@ export default async function SoftwareToolsPage() {
     let resources: ListResourcesOutput = [];
     let error: string | null = null;
     try {
-        // This will only work if the GITHUB_TOKEN is set in the environment
         const githubToken = process.env.GITHUB_TOKEN;
-        if (githubToken) {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+
+        if (!githubToken || !geminiApiKey) {
+            error = "Server configuration error: Required environment variables (GITHUB_TOKEN, GEMINI_API_KEY) are missing. Please set them in your deployment environment.";
+        } else {
             resources = await listResources({
                 githubToken,
                 repository: 'Codsach/codsach-resources',
                 category: 'software-tools',
             });
-        } else {
-            error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch software tools on server:", e);
-        // Don't throw an error, let the client handle it
-        error = "Could not fetch resources from GitHub on the server.";
+        error = "Could not fetch resources from GitHub on the server. The server logs may have more details.";
     }
     
     return (

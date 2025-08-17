@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
 
 function SearchPageContent({allFetchedResources, serverError}: {allFetchedResources: ListResourcesOutput, serverError: string | null}) {
-  const [allResources, setAllResources] = useState<ListResourcesOutput>(allFetchedResources);
   const [filteredResources, setFilteredResources] = useState<ListResourcesOutput>(allFetchedResources);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -30,12 +29,12 @@ function SearchPageContent({allFetchedResources, serverError}: {allFetchedResour
     if (isLoading) return;
 
     if (!searchQuery) {
-      setFilteredResources(allResources);
+      setFilteredResources(allFetchedResources);
       return;
     }
 
     const lowerCaseQuery = searchQuery.toLowerCase();
-    const results = allResources.filter(r => 
+    const results = allFetchedResources.filter(r => 
         r.title.toLowerCase().includes(lowerCaseQuery) ||
         r.description.toLowerCase().includes(lowerCaseQuery) ||
         r.tags.some(t => t.toLowerCase().includes(lowerCaseQuery)) ||
@@ -45,7 +44,7 @@ function SearchPageContent({allFetchedResources, serverError}: {allFetchedResour
     
     results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setFilteredResources(results);
-  }, [allResources, searchQuery, isLoading]);
+  }, [allFetchedResources, searchQuery, isLoading]);
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -88,7 +87,11 @@ async function SearchPageData() {
     let error: string | null = null;
     try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (githubToken) {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+
+        if (!githubToken || !geminiApiKey) {
+            error = "Server configuration error: Required environment variables (GITHUB_TOKEN, GEMINI_API_KEY) are missing. Please set them in your deployment environment.";
+        } else {
              const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
              const resourcePromises = categories.map(category => 
                 listResources({
@@ -99,12 +102,10 @@ async function SearchPageData() {
             );
             const results = await Promise.all(resourcePromises);
             resources = results.flat();
-        } else {
-             error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch resources for search on server:", e);
-        error = "Could not fetch resources from GitHub for search on the server.";
+        error = "Could not fetch resources from GitHub for search on the server. The server logs may have more details.";
     }
     return <SearchPageContent allFetchedResources={resources} serverError={error} />;
 }

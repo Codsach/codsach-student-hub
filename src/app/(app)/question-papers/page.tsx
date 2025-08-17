@@ -9,18 +9,20 @@ export default async function QuestionPapersPage() {
     let error: string | null = null;
     try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (githubToken) {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+
+        if (!githubToken || !geminiApiKey) {
+            error = "Server configuration error: Required environment variables (GITHUB_TOKEN, GEMINI_API_KEY) are missing. Please set them in your deployment environment.";
+        } else {
             resources = await listResources({
                 githubToken,
                 repository: 'Codsach/codsach-resources',
                 category: 'question-papers',
             });
-        } else {
-            error = "GitHub token is not configured on the server. Please set the GITHUB_TOKEN environment variable.";
         }
     } catch (e: any) {
         console.error("Failed to fetch question papers on server:", e);
-        error = "Could not fetch resources from GitHub on the server.";
+        error = "Could not fetch resources from GitHub on the server. The server logs may have more details.";
     }
     
     return (

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for uploading or updating files in a GitHub repository.
@@ -21,7 +22,8 @@ const UploadFileInputSchema = z.object({
   repository: z
     .string()
     .describe('The GitHub repository in the format "owner/repo".'),
-  folderPath: z.string().describe('The path to the folder where the resource will be stored.'),
+  // folderPath is now generated from title, so it's removed from input.
+  // folderPath: z.string().describe('The path to the folder where the resource will be stored.'),
   files: z.array(FileInputSchema).optional().describe('An array of files to upload.'),
   commitMessage: z.string().describe('The commit message for the file upload.'),
   metadata: z.object({
@@ -78,11 +80,24 @@ const uploadFileFlow = ai.defineFlow(
     const octokit = new Octokit({ auth: input.githubToken });
     const [owner, repo] = input.repository.split('/');
 
+    // Standardize folder name from title
+    const folderName = input.metadata.title.trim().replace(/\s+/g, '-').toLowerCase();
+    const category = input.metadata.tags.find(t => ['notes', 'lab-programs', 'question-papers', 'software-tools'].includes(t));
+
+    if (!category) {
+        return {
+            success: false,
+            error: "Could not determine a valid category from metadata tags.",
+        };
+    }
+    
+    const folderPath = `${category}/${folderName}`;
+
     try {
       // 1. Upload/Update the actual files if content is provided
       if (input.files && input.files.length > 0) {
         for (const file of input.files) {
-            const filePath = `${input.folderPath}/${file.name}`;
+            const filePath = `${folderPath}/${file.name}`;
             const fileSha = await getFileSha(octokit, owner, repo, filePath);
             await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
@@ -96,7 +111,10 @@ const uploadFileFlow = ai.defineFlow(
       }
 
       // 2. Upload/Update the metadata file
-      const metadataPath = `${input.folderPath}/metadata.json`;
+      const metadataPath = `${folderPath}/metadata.json`;
+      
+      // Check for existing metadata to merge, if necessary, though overwriting is usually fine.
+      // For this implementation, we'll just create/overwrite.
       const metadataContent = Buffer.from(JSON.stringify(input.metadata, null, 2)).toString('base64');
       const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
       

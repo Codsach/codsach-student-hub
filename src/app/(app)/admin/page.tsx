@@ -209,14 +209,11 @@ export default function AdminPage() {
     setIsUploading(true);
 
     const processUpload = async (fileContents: {name: string, content: string}[]) => {
-        const folderName = title.replace(/ /g, '-').toLowerCase();
-        const folderPath = `${category}/${folderName}`;
 
         try {
             const result = await uploadFile({
                 githubToken: githubToken,
                 repository: 'Codsach/codsach-resources',
-                folderPath: folderPath,
                 files: fileContents,
                 commitMessage: `feat: Add ${title}`,
                 metadata: {
@@ -338,13 +335,13 @@ export default function AdminPage() {
         if (!category) {
             throw new Error("Could not determine resource category.");
         }
-        const folderPath = `${category}/${resourceToEdit.folderName}`;
         
         const result = await uploadFile({
             githubToken: githubToken,
             repository: 'Codsach/codsach-resources',
-            folderPath: folderPath,
             commitMessage: `feat: Update metadata for ${editTitle}`,
+            // No files are passed, only updating metadata
+            files: [],
             metadata: {
               title: editTitle,
               description: editDescription,

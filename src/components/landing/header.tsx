@@ -2,13 +2,18 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Search, Menu, User, LogOut } from 'lucide-react';
+import { BookOpen, Search, Menu, User, LogOut, Bell, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '../theme-toggle';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
+
 
 const Logo = () => (
     <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -35,10 +40,56 @@ export function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
+
+  const [recentResources, setRecentResources] = useState<ListResourcesOutput>([]);
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsAdminLoggedIn(!!sessionStorage.getItem('isAdminLoggedIn'));
+      
+      const fetchResources = async () => {
+        try {
+            const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
+            // This is a dummy token. In a real app, you'd want to handle this securely.
+            // For a read-only public repo, we can sometimes get away without a token,
+            // but it's better to use one to avoid rate limits.
+            const dummyToken = 'any_string_will_do_for_public_repo';
+            const resourcePromises = categories.map(category => 
+                listResources({
+                    githubToken: dummyToken,
+                    repository: 'Codsach/codsach-resources',
+                    category,
+                })
+            );
+            const results = await Promise.all(resourcePromises);
+            const allFetchedResources = results.flat();
+            
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            const recent = allFetchedResources
+                .filter(r => new Date(r.date) > sevenDaysAgo)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            setRecentResources(recent);
+            
+            const lastViewedTimestamp = localStorage.getItem('lastViewedNotifications');
+            if (recent.length > 0) {
+                const latestResourceTimestamp = new Date(recent[0].date).getTime();
+                if (!lastViewedTimestamp || latestResourceTimestamp > parseInt(lastViewedTimestamp, 10)) {
+                    setHasUnread(true);
+                }
+            }
+
+        } catch (error) {
+            console.error("Could not fetch recent resources in header:", error);
+            // Don't show a toast here to avoid bothering users on every page load
+        }
+      };
+      
+      fetchResources();
     }
   }, []);
   
@@ -62,6 +113,19 @@ export function Header() {
         router.push('/search');
       }
       setIsMobileMenuOpen(false);
+  }
+  
+  const handleNotificationOpen = () => {
+      setHasUnread(false);
+      localStorage.setItem('lastViewedNotifications', Date.now().toString());
+  }
+
+  const getResourcePageLink = (resource: ListResourcesOutput[0]) => {
+      if (resource.tags.includes('notes')) return '/notes';
+      if (resource.tags.includes('lab-programs')) return '/lab-programs';
+      if (resource.tags.includes('question-papers')) return '/question-papers';
+      if (resource.tags.includes('software-tools')) return '/software-tools';
+      return '/';
   }
 
   const navLinks = [
@@ -108,6 +172,42 @@ export function Header() {
               />
             </div>
           </form>
+            <Popover onOpenChange={(open) => { if(open) handleNotificationOpen(); }}>
+                <PopoverTrigger asChild>
+                     <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5"/>
+                        {hasUnread && <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-primary ring-2 ring-background" />}
+                        <span className="sr-only">Notifications</span>
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">Recent Uploads</h4>
+                            <p className="text-sm text-muted-foreground">
+                                New resources added in the last 7 days.
+                            </p>
+                        </div>
+                        <div className="grid gap-2">
+                           {recentResources.length > 0 ? (
+                                recentResources.map(resource => (
+                                    <Link key={resource.folderName} href={getResourcePageLink(resource)} className="group grid grid-cols-[25px_1fr] items-start gap-3 rounded-md p-2 hover:bg-accent hover:text-accent-foreground transition-colors">
+                                        <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                                        <div className="grid gap-1">
+                                            <p className="text-sm font-medium leading-none">{resource.title}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {formatDistanceToNow(new Date(resource.date), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                ))
+                           ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No new uploads recently.</p>
+                           )}
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
           <ThemeToggle />
           {isAdminLoggedIn ? (
             <>

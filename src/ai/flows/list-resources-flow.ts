@@ -116,8 +116,8 @@ const listResourcesFlow = ai.defineFlow(
           }
       });
       
-      // 6. Construct the final resources array
-      const resources = metadataFiles.map(metadataFile => {
+      // 6. Construct the raw resources array
+      const rawResources = metadataFiles.map(metadataFile => {
         if (!metadataFile.path || !metadataFile.sha) return null;
         
         const folderPath = metadataFile.path.substring(0, metadataFile.path.lastIndexOf('/'));
@@ -134,8 +134,6 @@ const listResourcesFlow = ai.defineFlow(
             downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
         }));
 
-        // Get a reasonable date. Use metadata date, or a default.
-        // We avoid fetching commit history for performance.
         const resourceDate = metadata.date || new Date().toISOString();
 
         return {
@@ -152,13 +150,40 @@ const listResourcesFlow = ai.defineFlow(
           downloadUrl: metadata.downloadUrl,
           files: files,
         };
-      });
+      }).filter((r): r is ListResourcesOutput[0] => r !== null);
 
-      // Filter out nulls and sort by date descending
-      const filteredResources = resources.filter((r): r is ListResourcesOutput[0] => r !== null);
-      filteredResources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      // 7. Merge resources with the same title
+      const mergedResources: Record<string, ListResourcesOutput[0]> = {};
+
+      for (const resource of rawResources) {
+          const key = resource.title.trim().toLowerCase();
+          if (mergedResources[key]) {
+              // Merge files, ensuring no duplicates
+              const existingFiles = new Set(mergedResources[key].files.map(f => f.name));
+              for (const newFile of resource.files) {
+                  if (!existingFiles.has(newFile.name)) {
+                      mergedResources[key].files.push(newFile);
+                  }
+              }
+              // Merge tags, ensuring no duplicates
+              const existingTags = new Set(mergedResources[key].tags);
+               for (const newTag of resource.tags) {
+                  if (!existingTags.has(newTag)) {
+                      mergedResources[key].tags.push(newTag);
+                  }
+              }
+          } else {
+              mergedResources[key] = resource;
+          }
+      }
+
+      const finalResources = Object.values(mergedResources);
+
+      // 8. Sort by date descending
+      finalResources.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
-      return filteredResources;
+      return finalResources;
 
     } catch (error: any) {
        if (error.status === 404) {

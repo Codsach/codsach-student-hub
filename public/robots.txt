@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://codsach.vercel.app/sitemap.xml

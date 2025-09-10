@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '../theme-toggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -33,7 +33,7 @@ const Logo = () => (
 );
 
 
-export function Header() {
+export function Header({ recentResources = [] }: { recentResources: ListResourcesOutput }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
@@ -42,56 +42,21 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
-  const [recentResources, setRecentResources] = useState<ListResourcesOutput>([]);
   const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsAdminLoggedIn(!!sessionStorage.getItem('isAdminLoggedIn'));
       
-      const fetchResources = async () => {
-        try {
-            const categories = ['notes', 'lab-programs', 'question-papers', 'software-tools'];
-            // This is a dummy token. In a real app, you'd want to handle this securely.
-            // For a read-only public repo, we can sometimes get away without a token,
-            // but it's better to use one to avoid rate limits.
-            const dummyToken = 'any_string_will_do_for_public_repo';
-            const resourcePromises = categories.map(category => 
-                listResources({
-                    githubToken: dummyToken,
-                    repository: 'Codsach/codsach-resources',
-                    category,
-                })
-            );
-            const results = await Promise.all(resourcePromises);
-            const allFetchedResources = results.flat();
-            
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-            const recent = allFetchedResources
-                .filter(r => new Date(r.date) > sevenDaysAgo)
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            
-            setRecentResources(recent);
-            
-            const lastViewedTimestamp = localStorage.getItem('lastViewedNotifications');
-            if (recent.length > 0) {
-                const latestResourceTimestamp = new Date(recent[0].date).getTime();
-                if (!lastViewedTimestamp || latestResourceTimestamp > parseInt(lastViewedTimestamp, 10)) {
-                    setHasUnread(true);
-                }
-            }
-
-        } catch (error) {
-            console.error("Could not fetch recent resources in header:", error);
-            // Don't show a toast here to avoid bothering users on every page load
-        }
-      };
-      
-      fetchResources();
+      const lastViewedTimestamp = localStorage.getItem('lastViewedNotifications');
+      if (recentResources.length > 0) {
+          const latestResourceTimestamp = new Date(recentResources[0].date).getTime();
+          if (!lastViewedTimestamp || latestResourceTimestamp > parseInt(lastViewedTimestamp, 10)) {
+              setHasUnread(true);
+          }
+      }
     }
-  }, []);
+  }, [recentResources]);
   
     useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');

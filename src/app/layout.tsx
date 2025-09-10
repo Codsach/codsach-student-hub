@@ -16,14 +16,40 @@ const logoSvg = `<svg width="100" height="100" viewBox="0 0 100 100" fill="none"
 
 const faviconDataUrl = `data:image/svg+xml;base64,${btoa(logoSvg)}`;
 
+const siteUrl = "https://codsach.vercel.app";
 
 export const metadata: Metadata = {
   title: 'Codsach - Your Ultimate Coding Resource Hub',
-  description: 'Clone of the Codsach landing page, featuring a vast collection of resources for developers and students.',
+  description: 'Your comprehensive resource hub for MCA studies. Access lab programs, notes, question papers, and software tools all in one place.',
+  keywords: ['codsach', 'coding', 'tutorials', 'projects', 'programming', 'MCA', 'study notes', 'lab programs', 'question papers'],
+  authors: [{ name: 'Codsach' }],
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    title: 'Codsach - Your Ultimate Coding Resource Hub',
+    description: 'Your comprehensive resource hub for MCA studies. Access lab programs, notes, question papers, and software tools all in one place.',
+    url: siteUrl,
+    type: 'website',
+    images: [
+      {
+        url: '/codsach-preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'Codsach Preview Image',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Codsach - Your Ultimate Coding Resource Hub',
+    description: 'Your comprehensive resource hub for MCA studies. Access lab programs, notes, question papers, and software tools all in one place.',
+    images: ['/codsach-preview.png'],
+  },
   icons: {
     icon: faviconDataUrl,
   },
+  manifest: "/site.webmanifest",
 };
+
 
 export default function RootLayout({
   children,

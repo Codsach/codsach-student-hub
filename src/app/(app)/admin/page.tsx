@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/ai/flows/upload-flow';
 import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { deleteResource } from '@/ai/flows/delete-resource-flow';
+import { deleteFile } from '@/ai/flows/delete-file-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 
+
+type ResourceFile = ListResourcesOutput[0]['files'][0] & { path: string };
 
 export default function AdminPage() {
   const [tags, setTags] = useState<string[]>([]);
@@ -69,9 +72,14 @@ export default function AdminPage() {
   const [isLoadingResources, setIsLoadingResources] = useState(false);
   const [activeTab, setActiveTab] = useState("upload");
   
-  // State for deletion
+  // State for group deletion
   const [resourceToDelete, setResourceToDelete] = useState<ListResourcesOutput[0] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // State for single file deletion
+  const [fileToDelete, setFileToDelete] = useState<ResourceFile | null>(null);
+  const [isDeletingFile, setIsDeletingFile] = useState(false);
+
 
   // State for editing
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -83,6 +91,10 @@ export default function AdminPage() {
   const [editSemester, setEditSemester] = useState('');
   const [editYear, setEditYear] = useState('');
   const [editDownloadUrl, setEditDownloadUrl] = useState('');
+  
+  // State for file list view
+  const [isViewFilesModalOpen, setIsViewFilesModalOpen] = useState(false);
+  const [resourceToViewFiles, setResourceToViewFiles] = useState<ListResourcesOutput[0] | null>(null);
 
 
   useEffect(() => {
@@ -314,6 +326,59 @@ export default function AdminPage() {
       setResourceToDelete(null);
     }
   };
+
+  const handleDeleteFile = async () => {
+      if (!fileToDelete || !resourceToViewFiles) return;
+      setIsDeletingFile(true);
+      
+      const category = resourceToViewFiles.tags.find(t => ['notes', 'lab-programs', 'question-papers', 'software-tools'].includes(t));
+      if (!category) {
+        toast({ title: 'Error', description: 'Could not determine resource category.', variant: 'destructive' });
+        setIsDeletingFile(false);
+        return;
+      }
+      
+      const filePath = `${category}/${resourceToViewFiles.folderName}/${fileToDelete.name}`;
+
+      try {
+        const result = await deleteFile({
+            githubToken,
+            repository: 'Codsach/codsach-resources',
+            filePath: filePath,
+        });
+
+        if (result.success) {
+            toast({ title: 'Success', description: `File "${fileToDelete.name}" deleted.` });
+            
+            // Update local state
+            setAllResources(prevResources => prevResources.map(res => {
+                if (res.folderName === resourceToViewFiles.folderName) {
+                    return {
+                        ...res,
+                        files: res.files.filter(f => f.name !== fileToDelete.name)
+                    };
+                }
+                return res;
+            }));
+            
+            setResourceToViewFiles(prev => {
+                if (!prev) return null;
+                return {
+                    ...prev,
+                    files: prev.files.filter(f => f.name !== fileToDelete.name)
+                };
+            });
+
+        } else {
+            toast({ title: 'Deletion Failed', description: result.error, variant: 'destructive' });
+        }
+      } catch (error: any) {
+          toast({ title: 'Deletion Failed', description: error.message, variant: 'destructive' });
+      } finally {
+          setIsDeletingFile(false);
+          setFileToDelete(null);
+      }
+  }
   
    const handleOpenEditModal = (resource: ListResourcesOutput[0]) => {
     setResourceToEdit(resource);
@@ -324,6 +389,11 @@ export default function AdminPage() {
     setEditYear(resource.year || '');
     setEditDownloadUrl(resource.downloadUrl || '');
     setIsEditModalOpen(true);
+  };
+
+  const handleOpenViewFilesModal = (resource: ListResourcesOutput[0]) => {
+    setResourceToViewFiles(resource);
+    setIsViewFilesModalOpen(true);
   };
   
   const handleUpdateResource = async () => {
@@ -641,13 +711,13 @@ export default function AdminPage() {
                                         <TableCell>
                                             <Badge variant="outline" className={`${categoryColors[resource.tags[0]] || ''} border-none`}>{getCategoryName(resource.tags[0])}</Badge>
                                         </TableCell>
-                                        <TableCell>{resource.files?.length || (resource.downloadUrl ? 1 : 0)}</TableCell>
-                                        <TableCell>{resource.date}</TableCell>
-                                        <TableCell className="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon" asChild>
-                                                <Link href={resource.downloadUrl || '#'} target="_blank"><Eye className="h-4 w-4" /></Link>
+                                        <TableCell>
+                                            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => handleOpenViewFilesModal(resource)}>
+                                                {resource.files?.length || (resource.downloadUrl ? 1 : 0)}
                                             </Button>
-                                            
+                                        </TableCell>
+                                        <TableCell>{new Date(resource.date).toLocaleDateString()}</TableCell>
+                                        <TableCell className="flex items-center gap-2">
                                             <Dialog open={isEditModalOpen && resourceToEdit?.folderName === resource.folderName} onOpenChange={(open) => { if(!open) { setIsEditModalOpen(false); setResourceToEdit(null); } }}>
                                                 <DialogTrigger asChild>
                                                     <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(resource)}>
@@ -717,8 +787,8 @@ export default function AdminPage() {
                                                     <AlertDialogHeader>
                                                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                                       <AlertDialogDescription>
-                                                        This action cannot be undone. This will permanently delete the resource
-                                                        <span className='font-bold'> {resourceToDelete?.title} </span> 
+                                                        This action cannot be undone. This will permanently delete the entire resource
+                                                        <span className='font-bold'> &quot;{resourceToDelete?.title}&quot; </span> 
                                                         and all its associated files from your GitHub repository.
                                                       </AlertDialogDescription>
                                                     </AlertDialogHeader>
@@ -756,6 +826,60 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      <Dialog open={isViewFilesModalOpen} onOpenChange={(open) => { if(!open) { setIsViewFilesModalOpen(false); setResourceToViewFiles(null); }}}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Files for: {resourceToViewFiles?.title}</DialogTitle>
+                <DialogDescription>
+                    Manage individual files for this resource. Deleting a file is permanent.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
+                {resourceToViewFiles?.files.map((file) => (
+                    <div key={file.name} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
+                        <div className="flex items-center gap-3 min-w-0">
+                             <FileText className='h-5 w-5 text-primary flex-shrink-0' />
+                             <div className="flex flex-col min-w-0">
+                                <span className="font-medium truncate">{file.name}</span>
+                                <span className="text-xs text-muted-foreground">{file.size}</span>
+                             </div>
+                        </div>
+                         <AlertDialog onOpenChange={(open) => !open && setFileToDelete(null)}>
+                            <AlertDialogTrigger asChild>
+                                 <Button variant="ghost" size="icon" onClick={() => setFileToDelete(file as ResourceFile)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete this file?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                    This will permanently delete the file <span className="font-bold">&quot;{fileToDelete?.name}&quot;</span>. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteFile} disabled={isDeletingFile} className="bg-destructive hover:bg-destructive/90">
+                                        {isDeletingFile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                        Yes, delete file
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                ))}
+                {resourceToViewFiles?.files.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">No files in this resource.</p>
+                )}
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

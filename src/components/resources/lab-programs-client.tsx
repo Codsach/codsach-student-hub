@@ -10,13 +10,15 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ResourceCard } from '@/components/resources/resource-card';
-import { ListFilter, Loader2, SlidersHorizontal } from 'lucide-react';
+import { ListFilter, Loader2, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 export function LabProgramsClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
   const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
@@ -34,11 +36,12 @@ export function LabProgramsClient({ initialResources, serverError }: { initialRe
    useEffect(() => {
     if (serverError) {
         toast({
-            title: 'Error',
+            title: 'Error Loading Resources',
             description: serverError,
             variant: 'destructive',
         });
     }
+    setIsLoading(false);
   }, [serverError, toast]);
 
    useEffect(() => {
@@ -196,27 +199,37 @@ export function LabProgramsClient({ initialResources, serverError }: { initialRe
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
-        <div className={cn(isLoading ? 'opacity-50' : '')}>
-          {filteredResources.length > 0 ? (
-            <>
-              <p className="text-sm text-muted-foreground mb-6">
-                Showing {filteredResources.length} of {resources.length} resources
-              </p>
-              <div className="space-y-6">
-                {filteredResources.map((resource, index) => (
-                  <ResourceCard key={index} {...resource} />
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold">No Lab Programs Found</h3>
-              <p className="text-muted-foreground mt-2">
-                Try adjusting your filters or search query.
-              </p>
+        {serverError ? (
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Failed to Load Resources</AlertTitle>
+                <AlertDescription>
+                    {serverError}
+                </AlertDescription>
+            </Alert>
+        ) : (
+            <div className={cn(isLoading ? 'opacity-50' : '')}>
+            {filteredResources.length > 0 ? (
+                <>
+                <p className="text-sm text-muted-foreground mb-6">
+                    Showing {filteredResources.length} of {resources.length} resources
+                </p>
+                <div className="space-y-6">
+                    {filteredResources.map((resource, index) => (
+                    <ResourceCard key={index} {...resource} />
+                    ))}
+                </div>
+                </>
+            ) : (
+                <div className="text-center py-12">
+                <h3 className="text-xl font-semibold">No Lab Programs Found</h3>
+                <p className="text-muted-foreground mt-2">
+                    Try adjusting your filters or search query.
+                </p>
+                </div>
+            )}
             </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

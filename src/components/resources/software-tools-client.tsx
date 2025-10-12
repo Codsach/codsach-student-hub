@@ -2,11 +2,12 @@
 'use client';
 
 import { ResourceCard } from '@/components/resources/resource-card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { type ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function SoftwareToolsClient({ initialResources, serverError }: { initialResources: ListResourcesOutput, serverError: string | null }) {
   const [resources, setResources] = useState<ListResourcesOutput>(initialResources);
@@ -16,13 +17,12 @@ export function SoftwareToolsClient({ initialResources, serverError }: { initial
   useEffect(() => {
     if (serverError) {
         toast({
-            title: 'Error',
+            title: 'Error Loading Resources',
             description: serverError,
             variant: 'destructive',
         });
     }
-    // Simulate loading for demonstration
-    setTimeout(() => setIsLoading(false), 500); 
+    setIsLoading(false);
   }, [serverError, toast]);
 
   useEffect(() => {
@@ -43,25 +43,35 @@ export function SoftwareToolsClient({ initialResources, serverError }: { initial
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
-        <div className={cn(isLoading ? 'opacity-50' : '')}>
-          {resources.length > 0 ? (
-            <>
-              <p className="text-sm text-muted-foreground mb-6">
-                Showing {resources.length} of {resources.length} resources
-              </p>
-              <div className="space-y-6">
-                {resources.map((resource, index) => (
-                  <ResourceCard key={index} {...resource} />
-                ))}
-              </div>
-            </>
-          ) : (
-             <div className='text-center py-12'>
-                <h3 className='text-xl font-semibold'>No Software Tools Found</h3>
-                <p className='text-muted-foreground mt-2'>Please ensure the GITHUB_TOKEN is set on the server and resources have been uploaded.</p>
+        {serverError ? (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Failed to Load Resources</AlertTitle>
+                <AlertDescription>
+                    {serverError}
+                </AlertDescription>
+            </Alert>
+        ) : (
+            <div className={cn(isLoading ? 'opacity-50' : '')}>
+            {resources.length > 0 ? (
+                <>
+                <p className="text-sm text-muted-foreground mb-6">
+                    Showing {resources.length} of {resources.length} resources
+                </p>
+                <div className="space-y-6">
+                    {resources.map((resource, index) => (
+                    <ResourceCard key={index} {...resource} />
+                    ))}
+                </div>
+                </>
+            ) : (
+                <div className='text-center py-12'>
+                    <h3 className='text-xl font-semibold'>No Software Tools Found</h3>
+                    <p className='text-muted-foreground mt-2'>Please ensure the GITHUB_TOKEN is set on the server and resources have been uploaded.</p>
+                </div>
+            )}
             </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

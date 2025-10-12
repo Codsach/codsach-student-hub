@@ -8,7 +8,7 @@ async function getRecentResources() {
     try {
         const githubToken = process.env.GITHUB_TOKEN;
         if (!githubToken) {
-            console.warn("GITHUB_TOKEN is not set. Recent resources will not be fetched for app layout.");
+            console.error("Server configuration error: GITHUB_TOKEN is not set. Recent resources will not be fetched.");
             return [];
         }
         

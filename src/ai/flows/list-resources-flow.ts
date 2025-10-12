@@ -190,7 +190,7 @@ const listResourcesFlow = ai.defineFlow(
         console.warn(`Category "${input.category}" not found or repository is empty.`);
         return []; 
       }
-      console.error('Failed to list resources from GitHub:', error);
+      console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);
       throw new Error('Failed to list resources from GitHub.');
     }
   }

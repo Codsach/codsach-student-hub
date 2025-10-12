@@ -22,7 +22,7 @@ export default async function SoftwareToolsPage() {
         });
     } catch (e: any) {
         console.error("Failed to fetch software tools on server:", e);
-        error = e.message || "Could not fetch resources from GitHub. Please check server configuration.";
+        error = "Could not fetch resources from GitHub. This is likely due to a server configuration issue (missing GITHUB_TOKEN).";
     }
     
     return (

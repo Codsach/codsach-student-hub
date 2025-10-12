@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle, LinkIcon, FileText } from 'lucide-react';
+import { Github, Upload, File, X, Info, PlusCircle, ArrowLeft, Search, Eye, Edit, Trash2, LogOut, Loader2, CheckCircle, AlertTriangle, LinkIcon, FileText, Unplug } from 'lucide-react';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -174,6 +174,16 @@ export default function AdminPage() {
     } finally {
         setIsConnecting(false);
     }
+  };
+
+  const handleDisconnectGitHub = () => {
+    localStorage.removeItem('githubToken');
+    setGithubToken('');
+    setIsConnected(false);
+    toast({
+        title: 'Disconnected',
+        description: 'You have been disconnected from GitHub.',
+    });
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -524,15 +534,23 @@ export default function AdminPage() {
                         <li><Link href="https://github.com/settings/tokens/new" target="_blank" className='text-primary hover:underline'>Create Token</Link></li>
                     </ol>
                 </div>
-                <Button onClick={handleConnectGitHub} disabled={isConnecting || isConnected}>
-                    {isConnecting ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting...</>
-                    ) : isConnected ? (
-                        <><CheckCircle className="mr-2 h-4 w-4" /> Connected</>
-                    ) : (
-                        'Connect GitHub'
+                <div className="flex gap-4">
+                    <Button onClick={handleConnectGitHub} disabled={isConnecting || isConnected}>
+                        {isConnecting ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connecting...</>
+                        ) : isConnected ? (
+                            <><CheckCircle className="mr-2 h-4 w-4" /> Connected</>
+                        ) : (
+                            'Connect GitHub'
+                        )}
+                    </Button>
+                    {isConnected && (
+                        <Button variant="destructive" onClick={handleDisconnectGitHub}>
+                            <Unplug className="mr-2 h-4 w-4" />
+                            Disconnect
+                        </Button>
                     )}
-                </Button>
+                </div>
             </CardContent>
           </Card>
 
@@ -883,3 +901,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

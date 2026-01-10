@@ -47,6 +47,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: faviconDataUrl,
+    apple: '/apple-touch-icon.png',
   },
   manifest: "/site.webmanifest",
 };

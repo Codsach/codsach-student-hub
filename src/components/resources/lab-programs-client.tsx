@@ -41,8 +41,9 @@ export function LabProgramsClient({ initialResources, serverError }: { initialRe
             variant: 'destructive',
         });
     }
+    setResources(initialResources);
     setIsLoading(false);
-  }, [serverError, toast]);
+  }, [initialResources, serverError, toast]);
 
    useEffect(() => {
     setIsLoading(true);

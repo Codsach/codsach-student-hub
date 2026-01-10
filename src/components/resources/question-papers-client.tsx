@@ -42,8 +42,9 @@ export function QuestionPapersClient({ initialResources, serverError }: { initia
             variant: 'destructive',
         });
     }
+    setResources(initialResources);
     setIsLoading(false);
-  }, [serverError, toast]);
+  }, [initialResources, serverError, toast]);
 
    useEffect(() => {
     setIsLoading(true);

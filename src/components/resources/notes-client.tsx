@@ -42,8 +42,9 @@ export function NotesClient({ initialResources, serverError }: { initialResource
             variant: 'destructive',
         });
     }
+    setResources(initialResources);
     setIsLoading(false);
-  }, [serverError, toast]);
+  }, [initialResources, serverError, toast]);
 
    useEffect(() => {
     setIsLoading(true);

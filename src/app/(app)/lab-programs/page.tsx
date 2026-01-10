@@ -22,7 +22,7 @@ export default async function LabProgramsPage() {
         });
     } catch (e: any) {
         console.error("Failed to fetch lab programs on server:", e);
-        error = "Could not fetch resources from GitHub. This is likely due to a server configuration issue (missing GITHUB_TOKEN).";
+        error = "Could not fetch resources from GitHub. This is likely due to a server configuration issue (missing or invalid GITHUB_TOKEN).";
     }
 
     return (

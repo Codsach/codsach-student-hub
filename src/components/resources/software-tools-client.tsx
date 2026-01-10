@@ -22,8 +22,9 @@ export function SoftwareToolsClient({ initialResources, serverError }: { initial
             variant: 'destructive',
         });
     }
+    setResources(initialResources);
     setIsLoading(false);
-  }, [serverError, toast]);
+  }, [initialResources, serverError, toast]);
 
   useEffect(() => {
     setIsLoading(false);

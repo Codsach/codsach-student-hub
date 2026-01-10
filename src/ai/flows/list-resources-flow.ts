@@ -187,7 +187,7 @@ const listResourcesFlow = ai.defineFlow(
 
     } catch (error: any) {
        if (error.status === 404) {
-        console.warn(`Category "${input.category}" not found or repository is empty.`);
+        console.warn(`Category "${input.category}" not found or repository is empty. This can happen with an invalid GITHUB_TOKEN. Returning empty array.`);
         return []; 
       }
       console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);

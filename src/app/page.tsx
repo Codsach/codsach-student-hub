@@ -39,6 +39,7 @@ async function getRecentResources() {
 
     } catch (error) {
         console.error("Could not fetch recent resources in page layout:", error);
+        // Return an empty array on error to prevent crashing the page
         return [];
     }
 }

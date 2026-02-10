@@ -201,12 +201,7 @@ const listResourcesFlow = ai.defineFlow(
 
     } catch (error: any) {
        if (error.status === 404) {
-<<<<<<< HEAD
-        console.warn(`Category "${input.category}" not found or repository is empty. This can happen with an invalid GITHUB_TOKEN. Returning empty array.`);
-=======
-        // This can happen if the default branch has no commits yet.
-        console.warn(`Category "${input.category}" not found or repository branch is empty.`);
->>>>>>> e8ea7f6 (still can't able to upload github, check for any issues, and fix it)
+        console.warn(`Category "${input.category}" not found or repository is empty. This can happen with an invalid GITHUB_TOKEN or if the repository branch has no commits yet. Returning empty array.`);
         return []; 
       }
       console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);

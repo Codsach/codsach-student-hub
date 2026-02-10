@@ -35,7 +35,8 @@ const ResourceSchema = z.object({
   semester: z.string().optional(),
   year: z.string().optional(),
   keywords: z.array(z.string()),
-  date: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
   downloads: z.number(),
   files: z.array(FileSchema),
   folderName: z.string(),
@@ -157,6 +158,9 @@ const listResourcesFlow = ai.defineFlow(
             downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranchName}/${file.path}`,
           }));
 
+          const now = new Date().toISOString();
+          const creationDate = metadata.createdAt || metadata.date || now;
+
           return {
             title: metadata.title || folderName.replace(/[-_]/g, ' '),
             description: metadata.description || 'No description available.',
@@ -165,7 +169,8 @@ const listResourcesFlow = ai.defineFlow(
             semester: metadata.semester,
             year: metadata.year,
             keywords: metadata.keywords || [],
-            date: metadata.date || new Date().toISOString(),
+            createdAt: creationDate,
+            updatedAt: metadata.updatedAt || creationDate,
             downloads: 0,
             folderName,
             downloadUrl: metadata.downloadUrl,
@@ -195,14 +200,14 @@ const listResourcesFlow = ai.defineFlow(
 
       const finalResources = Object.values(merged);
       finalResources.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
       return finalResources;
     } catch (error: any) {
       if (error?.status === 404) {
         console.warn(
-          `Category "${input.category}" not found in repository, or repository is empty. Returning empty array.`
+          `Category "${input.category}" not found in repository, or repository is empty.`
         );
         return [];
       }

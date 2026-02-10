@@ -22,7 +22,8 @@ interface ResourceCardProps {
   description: string;
   tags: string[];
   keywords: string[];
-  date: string;
+  createdAt: string;
+  updatedAt: string;
   downloads: number;
   files: ResourceFile[];
   downloadUrl?: string | null; // For software tools with external links
@@ -31,7 +32,7 @@ interface ResourceCardProps {
   year?: string;
 }
 
-export function ResourceCard({ title, description, tags, keywords, date, downloads, files = [], downloadUrl, subject, semester, year }: ResourceCardProps) {
+export function ResourceCard({ title, description, tags, keywords, createdAt, downloads, files = [], downloadUrl, subject, semester, year }: ResourceCardProps) {
   const [viewFileUrl, setViewFileUrl] = useState<string | null>(null);
   const [viewFileName, setViewFileName] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export function ResourceCard({ title, description, tags, keywords, date, downloa
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2" title='Upload Date'>
               <Calendar className="h-4 w-4" />
-              <span>{date}</span>
+              <span>{new Date(createdAt).toLocaleDateString()}</span>
             </div>
              {!tags.includes('software-tools') && (
                 <div className="flex items-center gap-2" title='Total Size'>

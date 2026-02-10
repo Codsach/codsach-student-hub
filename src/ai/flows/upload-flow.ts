@@ -127,9 +127,13 @@ const uploadFileFlow = ai.defineFlow(
       
       const existingMetadata = await getFileContent(octokit, owner, repo, metadataPath, branch);
 
+      const now = new Date().toISOString();
       const finalMetadata = {
           ...input.metadata,
-          date: existingMetadata?.date || new Date().toISOString(),
+          // Preserve original creation date, or set it if new.
+          createdAt: existingMetadata?.createdAt || now,
+          // Always update the modification date.
+          updatedAt: now,
       };
       
       const metadataContent = Buffer.from(

@@ -734,7 +734,7 @@ export default function AdminPage() {
                                                 {resource.files?.length || (resource.downloadUrl ? 1 : 0)}
                                             </Button>
                                         </TableCell>
-                                        <TableCell>{new Date(resource.date).toLocaleDateString()}</TableCell>
+                                        <TableCell>{new Date(resource.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell className="flex items-center gap-2">
                                             <Dialog open={isEditModalOpen && resourceToEdit?.folderName === resource.folderName} onOpenChange={(open) => { if(!open) { setIsEditModalOpen(false); setResourceToEdit(null); } }}>
                                                 <DialogTrigger asChild>

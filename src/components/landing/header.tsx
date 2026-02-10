@@ -43,18 +43,19 @@ export function Header({ recentResources = [] }: { recentResources: ListResource
   const { toast } = useToast();
 
   const [hasUnread, setHasUnread] = useState(false);
+  const [unreadResources, setUnreadResources] = useState<ListResourcesOutput>([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsAdminLoggedIn(!!sessionStorage.getItem('isAdminLoggedIn'));
       
       const lastViewedTimestamp = localStorage.getItem('lastViewedNotifications');
-      if (recentResources.length > 0) {
-          const latestResourceTimestamp = new Date(recentResources[0].date).getTime();
-          if (!lastViewedTimestamp || latestResourceTimestamp > parseInt(lastViewedTimestamp, 10)) {
-              setHasUnread(true);
-          }
-      }
+      const lastViewedTime = lastViewedTimestamp ? parseInt(lastViewedTimestamp, 10) : 0;
+      
+      const newUnread = recentResources.filter(r => new Date(r.createdAt).getTime() > lastViewedTime);
+
+      setUnreadResources(newUnread);
+      setHasUnread(newUnread.length > 0);
     }
   }, [recentResources]);
   
@@ -150,24 +151,24 @@ export function Header({ recentResources = [] }: { recentResources: ListResource
                         <div className="space-y-2">
                             <h4 className="font-medium leading-none">Recent Uploads</h4>
                             <p className="text-sm text-muted-foreground">
-                                New resources added in the last 7 days.
+                                New resources since your last visit.
                             </p>
                         </div>
                         <div className="grid gap-2">
-                           {recentResources.length > 0 ? (
-                                recentResources.map(resource => (
+                           {unreadResources.length > 0 ? (
+                                unreadResources.map(resource => (
                                     <Link key={resource.folderName} href={getResourcePageLink(resource)} className="group grid grid-cols-[25px_1fr] items-start gap-3 rounded-md p-2 hover:bg-accent hover:text-accent-foreground transition-colors">
                                         <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
                                         <div className="grid gap-1">
                                             <p className="text-sm font-medium leading-none">{resource.title}</p>
                                             <p className="text-sm text-muted-foreground">
-                                                {formatDistanceToNow(new Date(resource.date), { addSuffix: true })}
+                                                {formatDistanceToNow(new Date(resource.createdAt), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </Link>
                                 ))
                            ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">No new uploads recently.</p>
+                            <p className="text-sm text-muted-foreground text-center py-4">No new uploads since your last visit.</p>
                            )}
                         </div>
                     </div>

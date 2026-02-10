@@ -28,12 +28,12 @@ async function getRecentResources() {
         const results = await Promise.all(resourcePromises);
         const allFetchedResources = results.flat();
         
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
         const recent = allFetchedResources
-            .filter(r => new Date(r.date) > sevenDaysAgo)
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            .filter(r => new Date(r.createdAt) > threeDaysAgo)
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         
         return recent;
 

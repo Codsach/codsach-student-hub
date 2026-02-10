@@ -19,10 +19,6 @@ const Logo = () => (
   </div>
 );
 
-const AndroidLogo = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M16 8L16 6a2 2 0 00-2-2H10a2 2 0 00-2 2v2"/><path d="M12 18h.01"/><path d_s_original="M5 10v9a2 2 0 002 2h10a2 2 0 002-2v-9"/><path d="M10.4 12a2.3 2.3 0 01-2.8 0"/><path d="M16.4 12a2.3 2.3 0 01-2.8 0"/></svg>
-);
-
 
 export function Footer() {
   const socialLinks = [
@@ -67,14 +63,6 @@ export function Footer() {
                 codsach@gmail.com
               </a>
             </div>
-          </div>
-          
-          <div>
-              <h3 className="font-semibold text-foreground mb-4">Download App</h3>
-              <a href="/codsach.apk" download="codsach.apk" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                  <AndroidLogo />
-                  Download for Android
-              </a>
           </div>
 
         </div>

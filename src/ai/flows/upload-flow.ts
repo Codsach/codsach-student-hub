@@ -54,7 +54,7 @@ export async function uploadFile(
 // Helper to get file SHA
 async function getFileSha(octokit: Octokit, owner: string, repo: string, path: string): Promise<string | undefined> {
     try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: 'main' });
         if (!Array.isArray(data) && data.sha) {
             return data.sha;
         }
@@ -70,7 +70,7 @@ async function getFileSha(octokit: Octokit, owner: string, repo: string, path: s
 // Helper to get file content as JSON
 async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string): Promise<any | undefined> {
     try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: 'main' });
         if (!Array.isArray(data) && 'content' in data) {
             const content = Buffer.from(data.content, 'base64').toString('utf-8');
             return JSON.parse(content);
@@ -137,6 +137,7 @@ const uploadFileFlow = ai.defineFlow(
           message: `feat: Add/Update metadata for ${input.metadata.title}`,
           content: metadataContent,
           sha: metadataSha,
+          branch: 'main',
       });
 
       // 2. Upload/Update the actual files if content is provided
@@ -151,6 +152,7 @@ const uploadFileFlow = ai.defineFlow(
                 message: `${input.commitMessage} - ${file.name}`,
                 content: file.content,
                 sha: fileSha,
+                branch: 'main',
             });
         }
       }

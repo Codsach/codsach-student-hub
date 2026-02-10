@@ -67,6 +67,23 @@ async function getFileSha(octokit: Octokit, owner: string, repo: string, path: s
     }
 }
 
+// Helper to get file content as JSON
+async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string): Promise<any | undefined> {
+    try {
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
+        if (!Array.isArray(data) && 'content' in data) {
+            const content = Buffer.from(data.content, 'base64').toString('utf-8');
+            return JSON.parse(content);
+        }
+        return undefined;
+    } catch (error: any) {
+        if (error.status === 404) {
+            return undefined; // File doesn't exist
+        }
+        throw error; // Re-throw other errors
+    }
+}
+
 
 const uploadFileFlow = ai.defineFlow(
   {
@@ -93,7 +110,36 @@ const uploadFileFlow = ai.defineFlow(
     const folderPath = `${category}/${folderName}`;
 
     try {
-      // 1. Upload/Update the actual files if content is provided
+      // 1. Create or update the metadata file for the resource group.
+      // This is done first to ensure the directory exists before uploading other files.
+      const metadataPath = `${folderPath}/metadata.json`;
+      
+      // Fetch existing metadata to preserve the original creation date.
+      const existingMetadata = await getFileContent(octokit, owner, repo, metadataPath);
+
+      const finalMetadata = {
+          ...input.metadata,
+          // If editing, use all new metadata but preserve the original date.
+          // If creating new, use a new date.
+          date: existingMetadata?.date || new Date().toISOString(),
+      };
+      
+      const metadataContent = Buffer.from(
+        JSON.stringify(finalMetadata, null, 2)
+      ).toString('base64');
+      
+      const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
+      
+      const metadataResponse = await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path: metadataPath,
+          message: `feat: Add/Update metadata for ${input.metadata.title}`,
+          content: metadataContent,
+          sha: metadataSha,
+      });
+
+      // 2. Upload/Update the actual files if content is provided
       if (input.files && input.files.length > 0) {
         for (const file of input.files) {
             const filePath = `${folderPath}/${file.name}`;
@@ -109,35 +155,18 @@ const uploadFileFlow = ai.defineFlow(
         }
       }
 
-      // 2. Create or update the metadata file for the resource group.
-      const metadataPath = `${folderPath}/metadata.json`;
-      
-      // We will overwrite the metadata each time. 
-      // This is simpler and ensures consistency. If you were to edit a resource, 
-      // you'd pass all the metadata again.
-      const metadataContent = Buffer.from(JSON.stringify(
-        { ...input.metadata, date: new Date().toISOString() }, // Add/update date on every upload
-        null, 
-        2
-      )).toString('base64');
-      
-      const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
-      
-      const metadataResponse = await octokit.rest.repos.createOrUpdateFileContents({
-          owner,
-          repo,
-          path: metadataPath,
-          message: `feat: Add/Update metadata for ${input.metadata.title}`,
-          content: metadataContent,
-          sha: metadataSha,
-      });
-
       return {
         success: true,
         url: metadataResponse.data.content?.html_url,
       };
     } catch (error: any) {
       console.error("GitHub Upload Error:", error);
+       if (error.status === 404) {
+          return {
+              success: false,
+              error: "Upload failed: A file path was not found. This can happen if the target repository or branch does not exist. Please check your configuration."
+          }
+      }
       return {
         success: false,
         error: error.message || 'Failed to upload file to GitHub.',

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for deleting a single file from GitHub.
@@ -33,9 +34,9 @@ export async function deleteFile(
 }
 
 // Helper to get file SHA
-async function getFileSha(octokit: Octokit, owner: string, repo: string, path: string): Promise<string | undefined> {
+async function getFileSha(octokit: Octokit, owner: string, repo: string, path: string, branch: string): Promise<string | undefined> {
     try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: branch });
         if (!Array.isArray(data) && data.sha) {
             return data.sha;
         }
@@ -60,7 +61,17 @@ const deleteFileFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      const sha = await getFileSha(octokit, owner, repo, input.filePath);
+      // Dynamically get the default branch
+      let branch: string;
+      try {
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        branch = repoData.default_branch;
+      } catch (e) {
+          console.error("Failed to get repository data. The repository may be empty or inaccessible.", e);
+          return { success: false, error: "Could not access the repository." };
+      }
+
+      const sha = await getFileSha(octokit, owner, repo, input.filePath, branch);
       
       if (!sha) {
           return { success: true, error: "File not found, assuming already deleted." };
@@ -72,6 +83,7 @@ const deleteFileFlow = ai.defineFlow(
         path: input.filePath,
         message: `feat: Delete resource file ${input.filePath}`,
         sha: sha,
+        branch: branch,
       });
 
       return { success: true };

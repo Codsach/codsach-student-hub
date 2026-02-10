@@ -52,9 +52,9 @@ export async function uploadFile(
 }
 
 // Helper to get file SHA
-async function getFileSha(octokit: Octokit, owner: string, repo: string, path: string): Promise<string | undefined> {
+async function getFileSha(octokit: Octokit, owner: string, repo: string, path: string, branch: string): Promise<string | undefined> {
     try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: 'main' });
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: branch });
         if (!Array.isArray(data) && data.sha) {
             return data.sha;
         }
@@ -68,9 +68,9 @@ async function getFileSha(octokit: Octokit, owner: string, repo: string, path: s
 }
 
 // Helper to get file content as JSON
-async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string): Promise<any | undefined> {
+async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string, branch: string): Promise<any | undefined> {
     try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: 'main' });
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref: branch });
         if (!Array.isArray(data) && 'content' in data) {
             const content = Buffer.from(data.content, 'base64').toString('utf-8');
             return JSON.parse(content);
@@ -106,21 +106,29 @@ const uploadFileFlow = ai.defineFlow(
         };
     }
     
-    // The folder path is now deterministic based on category and title.
     const folderPath = `${category}/${folderName}`;
 
     try {
+      // Dynamically get the default branch
+      let branch: string;
+      try {
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        branch = repoData.default_branch;
+      } catch (e) {
+          console.error("Failed to get repository data. The repository may be empty or inaccessible.", e);
+          return {
+              success: false,
+              error: "Could not access the repository. If it's new and empty, please initialize it by adding a README file on GitHub, then try again."
+          };
+      }
+
       // 1. Create or update the metadata file for the resource group.
-      // This is done first to ensure the directory exists before uploading other files.
       const metadataPath = `${folderPath}/metadata.json`;
       
-      // Fetch existing metadata to preserve the original creation date.
-      const existingMetadata = await getFileContent(octokit, owner, repo, metadataPath);
+      const existingMetadata = await getFileContent(octokit, owner, repo, metadataPath, branch);
 
       const finalMetadata = {
           ...input.metadata,
-          // If editing, use all new metadata but preserve the original date.
-          // If creating new, use a new date.
           date: existingMetadata?.date || new Date().toISOString(),
       };
       
@@ -128,7 +136,7 @@ const uploadFileFlow = ai.defineFlow(
         JSON.stringify(finalMetadata, null, 2)
       ).toString('base64');
       
-      const metadataSha = await getFileSha(octokit, owner, repo, metadataPath);
+      const metadataSha = await getFileSha(octokit, owner, repo, metadataPath, branch);
       
       const metadataResponse = await octokit.rest.repos.createOrUpdateFileContents({
           owner,
@@ -137,14 +145,14 @@ const uploadFileFlow = ai.defineFlow(
           message: `feat: Add/Update metadata for ${input.metadata.title}`,
           content: metadataContent,
           sha: metadataSha,
-          branch: 'main',
+          branch: branch,
       });
 
       // 2. Upload/Update the actual files if content is provided
       if (input.files && input.files.length > 0) {
         for (const file of input.files) {
             const filePath = `${folderPath}/${file.name}`;
-            const fileSha = await getFileSha(octokit, owner, repo, filePath);
+            const fileSha = await getFileSha(octokit, owner, repo, filePath, branch);
             await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
                 repo,
@@ -152,7 +160,7 @@ const uploadFileFlow = ai.defineFlow(
                 message: `${input.commitMessage} - ${file.name}`,
                 content: file.content,
                 sha: fileSha,
-                branch: 'main',
+                branch: branch,
             });
         }
       }

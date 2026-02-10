@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for deleting a resource and its metadata from GitHub.
@@ -43,11 +44,22 @@ const deleteResourceFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
+      // Dynamically get the default branch
+      let branch: string;
+      try {
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        branch = repoData.default_branch;
+      } catch (e) {
+          console.error("Failed to get repository data. The repository may be empty or inaccessible.", e);
+          return { success: false, error: "Could not access the repository." };
+      }
+
       // Get all files in the directory
       const { data: files } = await octokit.rest.repos.getContent({
         owner,
         repo,
         path: input.folderPath,
+        ref: branch,
       });
 
       if (!Array.isArray(files)) {
@@ -62,6 +74,7 @@ const deleteResourceFlow = ai.defineFlow(
           path: file.path,
           message: `feat: Delete resource file ${file.path}`,
           sha: file.sha,
+          branch: branch,
         });
       }
 

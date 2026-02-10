@@ -200,12 +200,12 @@ const listResourcesFlow = ai.defineFlow(
       return finalResources;
 
     } catch (error: any) {
-       if (error.status === 404) {
-        console.warn(`Category "${input.category}" not found or repository is empty. This can happen with an invalid GITHUB_TOKEN or if the repository branch has no commits yet. Returning empty array.`);
-        return []; 
-      }
-      console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);
-      throw new Error('Failed to list resources from GitHub.');
+        if (error.status === 404) {
+          console.warn(`Category "${input.category}" not found in repository, or repository is empty. Returning empty array.`);
+          return [];
+        }
+        console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);
+        throw new Error('Failed to list resources from GitHub.');
     }
   }
 );

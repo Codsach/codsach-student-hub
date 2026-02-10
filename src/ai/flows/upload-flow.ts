@@ -174,7 +174,7 @@ const uploadFileFlow = ai.defineFlow(
        if (error.status === 404) {
           return {
               success: false,
-              error: "Upload failed: A file path was not found. This can happen if the target repository or branch does not exist. Please check your configuration."
+              error: "Upload failed: 'Not Found'. This can happen if the repository is not accessible or your GitHub token is missing the 'repo' scope."
           }
       }
       return {

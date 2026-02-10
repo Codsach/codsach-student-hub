@@ -63,13 +63,27 @@ const listResourcesFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     try {
-      // 1. Get the SHA of the latest commit on the main branch
-      const { data: branch } = await octokit.rest.repos.getBranch({
+      // Dynamically get the default branch
+      let defaultBranchName: string;
+      try {
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        defaultBranchName = repoData.default_branch;
+      } catch (e: any) {
+        if (e.status === 404) {
+           console.warn(`Repository "${input.repository}" not found.`);
+           return []; // Return empty if repo not found
+        }
+        console.error('Failed to get repository data from GitHub.', e);
+        throw new Error('Failed to get repository data from GitHub.');
+      }
+      
+      // 1. Get the SHA of the latest commit on the default branch
+      const { data: branchData } = await octokit.rest.repos.getBranch({
         owner,
         repo,
-        branch: 'main', // Or your default branch
+        branch: defaultBranchName,
       });
-      const latestCommitSha = branch.commit.sha;
+      const latestCommitSha = branchData.commit.sha;
 
       // 2. Get the entire repository tree recursively in a single call
       const { data: tree } = await octokit.rest.git.getTree({
@@ -131,7 +145,7 @@ const listResourcesFlow = ai.defineFlow(
         const files: z.infer<typeof FileSchema>[] = resourceFiles.map(file => ({
             name: file.path?.substring(folderPath.length + 1) || '',
             size: `${((file.size || 0) / 1024 / 1024).toFixed(2)} MB`,
-            downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`
+            downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranchName}/${file.path}`
         }));
 
         const resourceDate = metadata.date || new Date().toISOString();
@@ -187,7 +201,12 @@ const listResourcesFlow = ai.defineFlow(
 
     } catch (error: any) {
        if (error.status === 404) {
+<<<<<<< HEAD
         console.warn(`Category "${input.category}" not found or repository is empty. This can happen with an invalid GITHUB_TOKEN. Returning empty array.`);
+=======
+        // This can happen if the default branch has no commits yet.
+        console.warn(`Category "${input.category}" not found or repository branch is empty.`);
+>>>>>>> e8ea7f6 (still can't able to upload github, check for any issues, and fix it)
         return []; 
       }
       console.error('Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.', error);

@@ -70,7 +70,7 @@ export function QuestionPapersClient({ initialResources, serverError }: { initia
     
     // Sorting
     if (sortOrder === 'date') {
-      resourcesToFilter.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      resourcesToFilter.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else if (sortOrder === 'downloads') {
       resourcesToFilter.sort((a, b) => b.downloads - a.downloads);
     } else if (sortOrder === 'name') {

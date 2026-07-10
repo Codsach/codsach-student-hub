@@ -141,7 +141,7 @@ const listResourcesFlow = ai.defineFlow(
 
       // Build resources
       const rawResources = metadataFiles
-        .map((metadataFile) => {
+        .map((metadataFile): ListResourcesOutput[0] | null => {
           if (!metadataFile.path || !metadataFile.sha) return null;
 
           const folderPath = metadataFile.path.substring(

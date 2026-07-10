@@ -72,7 +72,7 @@ function SearchResults({allFetchedResources, serverError}: {allFetchedResources:
         (r.keywords && r.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery)))
     );
     
-    results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setFilteredResources(results);
     setIsLoading(false);
   }, [allFetchedResources, searchQuery]);

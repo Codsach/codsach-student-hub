@@ -188,6 +188,12 @@ const uploadFileFlow = ai.defineFlow(
               error: "Upload failed: 'Not Found'. This can happen if the repository is not accessible or your GitHub token is missing the 'repo' scope."
           }
       }
+      if (error.status === 403 || (error.message && error.message.includes('Resource not accessible'))) {
+          return {
+              success: false,
+              error: "Upload failed: 'Resource not accessible'. Your GitHub Personal Access Token lacks write permissions. Please ensure your token has 'Contents: Read and Write' permissions for this repository."
+          }
+      }
       return {
         success: false,
         error: error.message || 'Failed to upload file to GitHub.',

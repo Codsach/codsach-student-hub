@@ -93,6 +93,12 @@ const deleteFileFlow = ai.defineFlow(
       return { success: true };
     } catch (error: any) {
       console.error('GitHub File Deletion Error:', error);
+      if (error.status === 403 || (error.message && error.message.includes('Resource not accessible'))) {
+          return {
+              success: false,
+              error: "Deletion failed: 'Resource not accessible'. Your GitHub Personal Access Token lacks write permissions. Please ensure your token has 'Contents: Read and Write' permissions for this repository."
+          }
+      }
       return { success: false, error: error.message || 'Failed to delete file from GitHub.' };
     }
   }

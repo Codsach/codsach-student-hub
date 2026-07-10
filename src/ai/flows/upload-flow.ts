@@ -34,6 +34,7 @@ const UploadFileInputSchema = z.object({
     keywords: z.array(z.string()).optional(),
     downloadUrl: z.string().optional(),
   }).describe("Metadata associated with the file."),
+  folderName: z.string().optional().describe('Optional existing folder name to use instead of generating from title.'),
 });
 export type UploadFileInput = z.infer<typeof UploadFileInputSchema>;
 
@@ -103,7 +104,7 @@ const uploadFileFlow = ai.defineFlow(
     const [owner, repo] = input.repository.split('/');
 
     // Standardize folder name from title. This is the key to grouping resources.
-    const folderName = input.metadata.title.trim().replace(/\s+/g, '-').toLowerCase();
+    const folderName = input.folderName || input.metadata.title.trim().replace(/\s+/g, '-').toLowerCase();
     const category = input.metadata.tags.find(t => ['notes', 'lab-programs', 'question-papers', 'software-tools'].includes(t));
 
     if (!category) {

@@ -435,6 +435,7 @@ export default function AdminPage() {
             commitMessage: `feat: Update metadata for ${editTitle}`,
             // No files are passed, only updating metadata
             files: [],
+            folderName: resourceToEdit.folderName,
             metadata: {
               title: editTitle,
               description: editDescription,

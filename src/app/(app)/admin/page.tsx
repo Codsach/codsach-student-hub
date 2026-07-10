@@ -14,9 +14,8 @@ import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Octokit } from 'octokit';
 import { useToast } from '@/hooks/use-toast';
-import { uploadFile } from '@/ai/flows/upload-flow';
+import { uploadFile, checkGitHubConnection } from '@/ai/flows/upload-flow';
 import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
 import { deleteResource } from '@/ai/flows/delete-resource-flow';
 import { deleteFile } from '@/ai/flows/delete-file-flow';
@@ -102,12 +101,21 @@ export default function AdminPage() {
     const isLoggedIn = sessionStorage.getItem('isAdminLoggedIn');
     if (!isLoggedIn) {
       router.push('/login');
+      return;
     }
-    const storedToken = localStorage.getItem('githubToken');
-    if (storedToken) {
-        setGithubToken(storedToken);
+    const initConnection = async () => {
+      const storedToken = localStorage.getItem('githubToken');
+      const res = await checkGitHubConnection(storedToken || undefined);
+      if (res.isConnected) {
         setIsConnected(true);
-    }
+        if (storedToken) {
+          setGithubToken(storedToken);
+        } else {
+          setGithubToken('SERVER_CONFIGURED');
+        }
+      }
+    };
+    initConnection();
   }, [router]);
   
   const fetchAllResources = async () => {
@@ -155,18 +163,23 @@ export default function AdminPage() {
     }
     setIsConnecting(true);
     try {
-        const octokit = new Octokit({ auth: githubToken });
-        await octokit.rest.users.getAuthenticated();
-        localStorage.setItem('githubToken', githubToken);
-        setIsConnected(true);
-        toast({
-            title: 'Success',
-            description: 'Successfully connected to GitHub.',
-        });
-    } catch (error) {
+        const res = await checkGitHubConnection(githubToken);
+        if (res.isConnected) {
+            if (githubToken !== 'SERVER_CONFIGURED') {
+                localStorage.setItem('githubToken', githubToken);
+            }
+            setIsConnected(true);
+            toast({
+                title: 'Success',
+                description: `Successfully connected to GitHub as ${res.username}.`,
+            });
+        } else {
+            throw new Error(res.error || 'The GitHub token is invalid or does not have the required permissions.');
+        }
+    } catch (error: any) {
         toast({
             title: 'Connection Failed',
-            description: 'The GitHub token is invalid or does not have the required permissions.',
+            description: error.message || 'The GitHub token is invalid or does not have the required permissions.',
             variant: 'destructive',
         });
         setIsConnected(false);
@@ -518,7 +531,7 @@ export default function AdminPage() {
                     <Input 
                         id="gh-token" 
                         placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
-                        type="password"
+                        type={githubToken === 'SERVER_CONFIGURED' ? 'text' : 'password'}
                         value={githubToken}
                         onChange={(e) => setGithubToken(e.target.value)}
                         disabled={isConnecting || isConnected}

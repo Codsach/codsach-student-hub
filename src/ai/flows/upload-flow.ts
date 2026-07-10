@@ -18,7 +18,7 @@ const FileInputSchema = z.object({
 });
 
 const UploadFileInputSchema = z.object({
-  githubToken: z.string().describe('The GitHub personal access token.'),
+  githubToken: z.string().optional().describe('The GitHub personal access token.'),
   repository: z
     .string()
     .describe('The GitHub repository in the format "owner/repo".'),
@@ -92,7 +92,14 @@ const uploadFileFlow = ai.defineFlow(
     outputSchema: UploadFileOutputSchema,
   },
   async (input) => {
-    const octokit = new Octokit({ auth: input.githubToken });
+    const token = (input.githubToken && input.githubToken !== 'SERVER_CONFIGURED') ? input.githubToken : process.env.GITHUB_TOKEN;
+    if (!token) {
+        return {
+            success: false,
+            error: "GitHub token is missing. Please configure GITHUB_TOKEN in your environment or enter it in the Admin panel.",
+        };
+    }
+    const octokit = new Octokit({ auth: token });
     const [owner, repo] = input.repository.split('/');
 
     // Standardize folder name from title. This is the key to grouping resources.
@@ -188,3 +195,17 @@ const uploadFileFlow = ai.defineFlow(
     }
   }
 );
+
+export async function checkGitHubConnection(clientToken?: string) {
+  const token = (clientToken && clientToken !== 'SERVER_CONFIGURED') ? clientToken : process.env.GITHUB_TOKEN;
+  if (!token) {
+    return { isConnected: false, error: "No GitHub token configured on the server." };
+  }
+  try {
+    const octokit = new Octokit({ auth: token });
+    const { data: user } = await octokit.rest.users.getAuthenticated();
+    return { isConnected: true, username: user.login };
+  } catch (error: any) {
+    return { isConnected: false, error: error.message || "Invalid GitHub token." };
+  }
+}

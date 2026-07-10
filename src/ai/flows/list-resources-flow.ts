@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { Octokit } from 'octokit';
 
 const ListResourcesInputSchema = z.object({
-  githubToken: z.string().describe('The GitHub personal access token.'),
+  githubToken: z.string().optional().describe('The GitHub personal access token.'),
   repository: z
     .string()
     .describe('The GitHub repository in the format "owner/repo".'),
@@ -59,7 +59,11 @@ const listResourcesFlow = ai.defineFlow(
     outputSchema: ListResourcesOutputSchema,
   },
   async (input) => {
-    const octokit = new Octokit({ auth: input.githubToken });
+    const token = (input.githubToken && input.githubToken !== 'SERVER_CONFIGURED') ? input.githubToken : process.env.GITHUB_TOKEN;
+    if (!token) {
+        throw new Error('GitHub token is missing.');
+    }
+    const octokit = new Octokit({ auth: token });
     const [owner, repo] = input.repository.split('/');
 
     try {

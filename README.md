@@ -7,6 +7,8 @@ Codsach is a modern, full-stack web application designed as a comprehensive reso
 | Light Theme | Dark Theme |
 | --- | --- |
 | ![Light Theme](public/screenshot-light.png) | ![Dark Theme](public/screenshot-dark.png) |
+| **Lab Programs** | **Admin Dashboard** |
+| ![Lab Programs](public/screenshot-lab.png) | ![Admin Dashboard](public/screenshot-admin.png) |
 
 ## ✨ Features
 
@@ -93,11 +95,6 @@ Codsach is a modern, full-stack web application designed as a comprehensive reso
    ```
    Open [http://localhost:9002](http://localhost:9002) in your browser.
 
-## 🔐 Admin Access
-
-The admin panel is accessible at [http://localhost:9002/login](http://localhost:9002/login) using the default credentials:
-- **Email**: `admin@codsach.com`
-- **Password**: `codsach@22`
 
 ## 🌐 Deployment
 

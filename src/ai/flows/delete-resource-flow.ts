@@ -11,6 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { Octokit } from 'octokit';
+import { revalidateTag } from 'next/cache';
 
 const DeleteResourceInputSchema = z.object({
   githubToken: z.string().optional().describe('The GitHub personal access token.'),
@@ -80,6 +81,13 @@ const deleteResourceFlow = ai.defineFlow(
           sha: file.sha,
           branch: branch,
         });
+      }
+
+      try {
+        revalidateTag('recent-resources');
+        revalidateTag('codsach-github-repo-stats');
+      } catch (cacheError) {
+        console.warn('Could not revalidate cache tags after deletion:', cacheError);
       }
 
       return { success: true };

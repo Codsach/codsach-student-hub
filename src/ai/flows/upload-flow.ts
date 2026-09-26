@@ -11,6 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { Octokit } from 'octokit';
+import { revalidateTag } from 'next/cache';
 
 const FileInputSchema = z.object({
   name: z.string(),
@@ -175,6 +176,13 @@ const uploadFileFlow = ai.defineFlow(
                 branch: branch,
             });
         }
+      }
+
+      try {
+        revalidateTag('recent-resources');
+        revalidateTag('codsach-github-repo-stats');
+      } catch (cacheError) {
+        console.warn('Could not revalidate cache tags after upload:', cacheError);
       }
 
       return {

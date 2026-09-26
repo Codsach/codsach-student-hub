@@ -60,13 +60,11 @@ const listResourcesFlow = ai.defineFlow(
   },
   async (input) => {
     const token = (input.githubToken && input.githubToken !== 'SERVER_CONFIGURED') ? input.githubToken : process.env.GITHUB_TOKEN;
-    if (!token) {
-        throw new Error('GitHub token is missing.');
-    }
-    const octokit = new Octokit({ auth: token });
     const [owner, repo] = input.repository.split('/');
 
-    try {
+    const executeFetch = async (authToken?: string): Promise<ListResourcesOutput> => {
+      const octokit = new Octokit(authToken ? { auth: authToken } : {});
+
       // Get default branch
       let defaultBranchName: string;
       try {
@@ -77,8 +75,7 @@ const listResourcesFlow = ai.defineFlow(
           console.warn(`Repository "${input.repository}" not found.`);
           return [];
         }
-        console.error('Failed to get repository data from GitHub.', e);
-        throw new Error('Failed to get repository data from GitHub.');
+        throw e;
       }
 
       // Get latest commit SHA
@@ -162,8 +159,8 @@ const listResourcesFlow = ai.defineFlow(
             downloadUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranchName}/${file.path}`,
           }));
 
-          const now = new Date().toISOString();
-          const creationDate = metadata.createdAt || metadata.date || now;
+          const defaultFallbackDate = '2025-01-01T00:00:00.000Z';
+          const creationDate = metadata.createdAt || metadata.date || defaultFallbackDate;
 
           return {
             title: metadata.title || folderName.replace(/[-_]/g, ' '),
@@ -208,6 +205,21 @@ const listResourcesFlow = ai.defineFlow(
       );
 
       return finalResources;
+    };
+
+    try {
+      if (token) {
+        try {
+          return await executeFetch(token);
+        } catch (authError: any) {
+          if (authError?.status === 401 || authError?.status === 403) {
+            console.warn(`GitHub token unauthorized (${authError?.status}), falling back to public GitHub request for "${input.category}".`);
+            return await executeFetch();
+          }
+          throw authError;
+        }
+      }
+      return await executeFetch();
     } catch (error: any) {
       if (error?.status === 404) {
         console.warn(
@@ -217,11 +229,10 @@ const listResourcesFlow = ai.defineFlow(
       }
 
       console.error(
-        'Failed to list resources from GitHub. This is likely due to an invalid or missing GITHUB_TOKEN on the server.',
-        error
+        'Failed to list resources from GitHub:',
+        error?.message || error
       );
-
-      throw new Error('Failed to list resources from GitHub.');
+      return [];
     }
   }
 );

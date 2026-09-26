@@ -8,6 +8,7 @@ import { Benefits } from '@/components/landing/benefits';
 import { Cta } from '@/components/landing/cta';
 import { Suspense } from 'react';
 import { listResources, ListResourcesOutput } from '@/ai/flows/list-resources-flow';
+import { getLiveRepoStats } from '@/lib/github-stats';
 
 async function getRecentResources() {
     try {
@@ -46,7 +47,10 @@ async function getRecentResources() {
 
 
 export default async function Home() {
-  const recentResources = await getRecentResources();
+  const [recentResources, liveStats] = await Promise.all([
+    getRecentResources(),
+    getLiveRepoStats(),
+  ]);
 
   return (
     <div className="flex flex-col min-h-dvh bg-background w-full">
@@ -55,7 +59,7 @@ export default async function Home() {
       </Suspense>
       <main className="flex-grow">
         <Hero />
-        <Stats />
+        <Stats stats={liveStats} />
         <Resources />
         <Benefits />
         <Cta />

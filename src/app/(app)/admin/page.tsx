@@ -542,7 +542,7 @@ export default function AdminPage() {
                     <div className='font-semibold flex items-center gap-2'><Info className='h-4 w-4'/>How to get a GitHub Token:</div>
                     <ol className='list-decimal list-inside space-y-1'>
                         <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
-                        <li>Click "Generate new token (classic)"</li>
+                        <li>Click &quot;Generate new token (classic)&quot;</li>
                         <li>Select scopes: <span className='font-mono bg-yellow-100 dark:bg-yellow-900/50 px-1 rounded'>repo</span> (Full control of private repositories)</li>
                         <li>Copy the generated token and paste it above</li>
                         <li><Link href="https://github.com/settings/tokens/new" target="_blank" className='text-primary hover:underline'>Create Token</Link></li>

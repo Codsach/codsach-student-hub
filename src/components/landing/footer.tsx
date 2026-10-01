@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
 const Logo = () => (
   <div className="relative w-8 h-8 group-hover:scale-110 transition-transform">
@@ -19,57 +19,95 @@ const Logo = () => (
   </div>
 );
 
-
 export function Footer() {
   const socialLinks = [
-    { icon: <Twitter className="h-5 w-5" />, href: '#' },
-    { icon: <Github className="h-5 w-5" />, href: '#' },
-    { icon: <Linkedin className="h-5 w-5" />, href: '#' },
+    {
+      name: 'GitHub',
+      icon: <Github className="h-5 w-5" />,
+      href: 'https://www.github.com/codsach',
+    },
+    {
+      name: 'LinkedIn',
+      icon: <Linkedin className="h-5 w-5" />,
+      href: 'https://www.linkedin.com/in/sachinr-dev',
+    },
+  ];
+
+  const quickLinks = [
+    { name: 'Lab Programs', href: '/lab-programs' },
+    { name: 'Study Notes', href: '/notes' },
+    { name: 'Question Papers', href: '/question-papers' },
+    { name: 'Software Tools', href: '/software-tools' },
+    { name: 'Search Resources', href: '/search' },
   ];
 
   return (
-    <footer className="bg-background text-muted-foreground">
+    <footer className="bg-background text-muted-foreground border-t">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-2xl group">
               <Logo />
-              <h1 className="font-headline text-2xl font-bold tracking-tight text-gradient">
+              <span className="font-headline text-2xl font-bold tracking-tight text-gradient">
                 Codsach
-              </h1>
+              </span>
             </Link>
-            <p className="text-sm max-w-xs">
+            <p className="text-sm max-w-xs text-muted-foreground">
               Your comprehensive resource hub for MCA studies.
             </p>
-            <div className="flex items-center gap-4 mt-2">
-              {socialLinks.map((link, index) => (
-                <Link
-                  key={index}
+            <div className="flex items-center gap-3 mt-2">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.name}
                   href={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg border bg-card hover:bg-accent hover:text-primary transition-all duration-200"
+                  aria-label={link.name}
                 >
                   {link.icon}
-                  <span className="sr-only">Social Media</span>
-                </Link>
+                </a>
               ))}
             </div>
           </div>
           
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
-            <div className="flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4" />
-              <a href="mailto:codsach@gmail.com" className="hover:text-primary transition-colors">
-                codsach@gmail.com
-              </a>
-            </div>
+            <h3 className="font-semibold text-foreground mb-4 text-base">Quick Links</h3>
+            <ul className="space-y-2.5 text-sm">
+              {quickLinks.map((item) => (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className="hover:text-primary transition-colors inline-block"
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
+          <div>
+            <h3 className="font-semibold text-foreground mb-4 text-base">Contact & Connect</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                <a href="mailto:codsach@gmail.com" className="hover:text-primary transition-colors">
+                  codsach@gmail.com
+                </a>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Developed by Sachin R. Feel free to connect on GitHub or LinkedIn!
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="mt-8 pt-8 border-t text-center text-sm">
+
+        <div className="mt-10 pt-6 border-t text-center text-sm text-muted-foreground">
            <p>&copy; {new Date().getFullYear()} Codsach. All rights reserved.</p>
         </div>
       </div>
     </footer>
   );
 }
+

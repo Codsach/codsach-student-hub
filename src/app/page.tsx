@@ -7,14 +7,15 @@ import { Resources } from '@/components/landing/resources';
 import { Benefits } from '@/components/landing/benefits';
 import { Cta } from '@/components/landing/cta';
 import { Suspense } from 'react';
-import { getRecentResources } from '@/lib/resources';
+import { getRecentResources, getCategoryResourceStats } from '@/lib/resources';
 import { getLiveRepoStats } from '@/lib/github-stats';
 
 
 export default async function Home() {
-  const [recentResources, liveStats] = await Promise.all([
+  const [recentResources, liveStats, categoryStats] = await Promise.all([
     getRecentResources(),
     getLiveRepoStats(),
+    getCategoryResourceStats(),
   ]);
 
   return (
@@ -25,7 +26,7 @@ export default async function Home() {
       <main className="flex-grow">
         <Hero />
         <Stats stats={liveStats} />
-        <Resources />
+        <Resources categoryStats={categoryStats} />
         <Benefits />
         <Cta />
       </main>
